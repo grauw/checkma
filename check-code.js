@@ -13,6 +13,10 @@ function main()
 	var program = new Program(ast);
 
 	console.log(program);
+	
+	program.traverseStatements(function(statement) {
+		console.log(statement);
+	});
 }
 
 
@@ -80,18 +84,10 @@ function Program(json)
 
 types.Program = extend(Node, Program);
 
-Program.prototype.getVariables = function()
+Program.prototype.traverseStatements = function(callback)
 {
-	var variables = {};
-	this.body.forEach(function(statement) {
-		if (statement instanceof FunctionDeclaration)
-			variables[statement.id] = statement;
-		else if (statement instanceof VariableDeclaration)
-			statement.declarations.forEach(function(declarator) {
-				variables[declarator.id] = declarator;
-			});
-	});
-	return variables;
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].traverseStatements(callback);
 };
 
 
@@ -104,6 +100,12 @@ function Statement(json)
 }
 
 extend(Node, Statement);
+
+Statement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+};
+
 
 
 
@@ -154,6 +156,14 @@ function IfStatement(json)
 
 types.IfStatement = extend(Statement, IfStatement);
 
+IfStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.consequent.traverseStatements(callback);
+	if (this.alternate)
+		this.alternate.traverseStatements(callback);
+};
+
 
 
 
@@ -163,6 +173,12 @@ function ForStatement(json)
 }
 
 types.ForStatement = extend(Statement, ForStatement);
+
+ForStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
 
 
 
@@ -174,6 +190,12 @@ function ForInStatement(json)
 
 types.ForInStatement = extend(Statement, ForInStatement);
 
+ForInStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
+
 
 
 
@@ -183,6 +205,12 @@ function WhileStatement(json)
 }
 
 types.WhileStatement = extend(Statement, WhileStatement);
+
+WhileStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
 
 
 
@@ -194,6 +222,12 @@ function DoWhileStatement(json)
 
 types.DoWhileStatement = extend(Statement, DoWhileStatement);
 
+DoWhileStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
+
 
 
 
@@ -203,6 +237,14 @@ function SwitchStatement(json)
 }
 
 types.SwitchStatement = extend(Statement, SwitchStatement);
+
+SwitchStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	for (var i = 0; i < this.cases.length; i++)
+		for (var j = 0; j < this.cases[i].consequent.length; j++)
+			this.cases[i].consequent[j].traverseStatements(callback);
+};
 
 
 
@@ -277,6 +319,13 @@ function BlockStatement(json)
 }
 
 types.BlockStatement = extend(Statement, BlockStatement);
+
+BlockStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].traverseStatements(callback);
+};
 
 
 
