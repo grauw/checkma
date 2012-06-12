@@ -52,6 +52,11 @@ function Node(json)
 	}
 }
 
+Node.prototype.toString = function()
+{
+	return this.constructor.name;
+};
+
 function createFromJson(json)
 {
 	if (json instanceof Array)
