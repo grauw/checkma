@@ -131,6 +131,11 @@ function VariableDeclarator(json)
 
 types.VariableDeclarator = extend(Node, VariableDeclarator);
 
+VariableDeclarator.prototype.getId = function()
+{
+	return this.id.name;
+};
+
 
 
 
@@ -140,6 +145,11 @@ function FunctionDeclaration(json)
 }
 
 types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
+
+FunctionDeclaration.prototype.getId = function()
+{
+	return this.id.name;
+};
 
 
 
@@ -531,6 +541,11 @@ function FunctionExpression(json)
 }
 
 types.FunctionExpression = extend(Expression, FunctionExpression);
+
+FunctionExpression.prototype.getId = function()
+{
+	return this.id.name;
+};
 
 
 
