@@ -17,6 +17,8 @@ function main()
 	program.traverseStatements(function(statement) {
 		console.log(statement);
 	});
+	
+	console.log(program.scope);
 }
 
 
@@ -82,9 +84,51 @@ var types = {};
 
 
 
+function Scope(parent)
+{
+	this.parent = parent || null;
+	this.identifiers = {};
+}
+
+Scope.prototype.getIdentifier = function(id)
+{
+	return this.identifiers[id] || null;
+};
+
+Scope.prototype.addIdentifier = function(id, reference)
+{
+	this.identifiers[id] = reference;
+};
+
+
+
+
+function GlobalScope()
+{
+	Scope.call(this, null);
+	this.addIdentifier("undefined", new Reference());
+}
+
+extend(Scope, GlobalScope);
+
+
+
+
+function Reference(declaration)
+{
+	this.declaration = declaration || null;
+}
+
+
+
+
 function Program(json)
 {
 	Node.call(this, json);
+	
+	this.scope = null;
+	
+	this.initialiseScope();
 }
 
 types.Program = extend(Node, Program);
@@ -93,6 +137,26 @@ Program.prototype.traverseStatements = function(callback)
 {
 	for (var i = 0; i < this.body.length; i++)
 		this.body[i].traverseStatements(callback);
+};
+
+Program.prototype.initialiseScope = function()
+{
+	var scope = new Scope(new GlobalScope());
+	
+	// add function declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof FunctionDeclaration)
+			scope.addIdentifier(statement.getId(), new Reference(statement));
+	});
+	
+	// add variable declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof VariableDeclaration)
+			for (var i = 0; i < statement.declarations.length; i++)
+				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+	});
+	
+	this.scope = scope;
 };
 
 
@@ -142,6 +206,8 @@ VariableDeclarator.prototype.getId = function()
 function FunctionDeclaration(json)
 {
 	Statement.call(this, json);
+	
+	this.scope = null;
 }
 
 types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
@@ -149,6 +215,34 @@ types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
 FunctionDeclaration.prototype.getId = function()
 {
 	return this.id.name;
+};
+
+FunctionDeclaration.prototype.initialiseScope = function(parent)
+{
+	var scope = new Scope(parent);
+	
+	// add parameters
+	this.params.forEach(function(param) {
+		scope.addIdentifier(param.name, new Reference());
+	});
+	
+	// add function declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof FunctionDeclaration)
+			scope.addIdentifier(statement.getId(), new Reference(statement));
+	});
+	
+	// add arguments object
+	scope.addIdentifier("arguments", new Reference());
+	
+	// add variable declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof VariableDeclaration)
+			for (var i = 0; i < statement.declarations.length; i++)
+				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+	});
+	
+	this.scope = scope;
 };
 
 
@@ -538,6 +632,8 @@ types.ArrayExpression = extend(Expression, ArrayExpression);
 function FunctionExpression(json)
 {
 	Expression.call(this, json);
+	
+	this.scope = null;
 }
 
 types.FunctionExpression = extend(Expression, FunctionExpression);
@@ -545,6 +641,41 @@ types.FunctionExpression = extend(Expression, FunctionExpression);
 FunctionExpression.prototype.getId = function()
 {
 	return this.id.name;
+};
+
+FunctionExpression.prototype.initialiseScope = function(parent)
+{
+	if (this.id)
+	{
+		// insert wrapper scope for the identifier
+		parent = new Scope(parent);
+		parent.addIdentifier(this.id.name, new Reference(this));
+	}
+	
+	var scope = new Scope(parent);
+	
+	// add parameters
+	this.params.forEach(function(param) {
+		scope.addIdentifier(param.name, new Reference());
+	});
+	
+	// add function declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof FunctionDeclaration)
+			scope.addIdentifier(statement.getId(), new Reference(statement));
+	});
+	
+	// add arguments object
+	scope.addIdentifier("arguments", new Reference());
+	
+	// add variable declarations
+	this.traverseStatements(function(statement) {
+		if (statement instanceof VariableDeclaration)
+			for (var i = 0; i < statement.declarations.length; i++)
+				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+	});
+	
+	this.scope = scope;
 };
 
 
