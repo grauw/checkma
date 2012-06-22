@@ -1010,7 +1010,7 @@ types.FunctionExpression = extend(Expression, FunctionExpression);
 
 FunctionExpression.prototype.getId = function()
 {
-	return this.id.name;
+	return this.id && this.id.name || null;
 };
 
 FunctionExpression.prototype.initialiseScope = function(parent)
