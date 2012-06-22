@@ -18,10 +18,19 @@ function main()
 	scopes.forEach(function(scope) {
 		for (var member in scope.members)
 		{
-			if (scope.members[member].references.length == 0 && member != "this" && member != "arguments" && member != "undefined")
+			if (member != "this" && member != "arguments" && member != "undefined")
 			{
 				var name = scope instanceof GlobalScope ? "global" : scope.owner && (scope.owner instanceof Program ? "program" : scope.owner.getId && scope.owner.getId() || scope.owner.constructor.name);
-				console.log("Scope", name, "member", member, "is not referenced.");
+				
+				if (scope.members[member].references.length == 0)
+				{
+					console.log("Scope", name, "member", member, "is not referenced.");
+				}
+				
+				if (scope.members[member].autoGlobal)
+				{
+					console.log("Scope", name, "member", member, "is a global.");
+				}
 			}
 		}
 	});
