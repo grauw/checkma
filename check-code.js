@@ -15,7 +15,16 @@ function main()
 	program.initialiseScope();
 	program.initialiseReferences();
 
-	console.log(program.scope);
+	scopes.forEach(function(scope) {
+		for (var member in scope.members)
+		{
+			if (scope.members[member].references.length == 0 && member != "this" && member != "arguments" && member != "undefined")
+			{
+				var name = scope instanceof GlobalScope ? "global" : scope.owner && (scope.owner instanceof Program ? "program" : scope.owner.getId && scope.owner.getId() || scope.owner.constructor.name);
+				console.log("Scope", name, "member", member, "is not referenced.");
+			}
+		}
+	});
 }
 
 
@@ -77,12 +86,15 @@ function createFromJson(json)
 }
 
 var types = {};
+var scopes = [];
 
 
 
 
 function Scope(owner, parent)
 {
+	scopes.push(this);
+	
 	this.owner = owner;
 	this.parent = parent || null;
 	this.members = {};
