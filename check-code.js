@@ -484,16 +484,6 @@ types.EmptyStatement = extend(Statement, EmptyStatement);
 
 
 
-function Literal(json)
-{
-	Node.call(this, json);
-}
-
-types.Literal = extend(Node, Literal);
-
-
-
-
 function Expression(json)
 {
 	Node.call(this, json);
@@ -504,9 +494,21 @@ extend(Node, Expression);
 
 
 
+function Literal(json)
+{
+	Expression.call(this, json);
+}
+
+types.Literal = extend(Expression, Literal);
+
+
+
+
 function Identifier(json)
 {
 	Expression.call(this, json);
+	
+	this.reference = null;
 }
 
 types.Identifier = extend(Expression, Identifier);
