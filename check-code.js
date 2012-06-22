@@ -65,7 +65,7 @@ function Node(json)
 		if (property == "type")
 			continue;
 		
-		this[property] = createFromJson(json[property]);
+		this["_" + property] = createFromJson(json[property]);
 	}
 }
 
@@ -104,20 +104,20 @@ function Scope(owner, parent)
 {
 	scopes.push(this);
 	
-	this.owner = owner;
-	this.parent = parent || null;
-	this.members = {};
-	this.members["this"] = new Reference();
+	this._owner = owner;
+	this._parent = parent || null;
+	this._members = {};
+	this._members["this"] = new Reference();
 }
 
 Scope.prototype.lookupMember = function(id)
 {
-	return this.members[id] || (this.parent && this.parent.lookupMember(id)) || null;
+	return this._members[id] || (this._parent && this._parent.lookupMember(id)) || null;
 };
 
 Scope.prototype.addMember = function(id, reference)
 {
-	this.members[id] = reference;
+	this._members[id] = reference;
 };
 
 
@@ -126,42 +126,42 @@ Scope.prototype.addMember = function(id, reference)
 function GlobalScope()
 {
 	Scope.call(this, null, null);
-	this.members["NaN"] = new BuiltInReference();
-	this.members["Infinity"] = new BuiltInReference();
-	this.members["undefined"] = new BuiltInReference();
-	this.members["eval"] = new BuiltInReference();
-	this.members["parseInt"] = new BuiltInReference();
-	this.members["parseFloat"] = new BuiltInReference();
-	this.members["isNaN"] = new BuiltInReference();
-	this.members["isFinite"] = new BuiltInReference();
-	this.members["decodeURI"] = new BuiltInReference();
-	this.members["decodeURIComponent"] = new BuiltInReference();
-	this.members["encodeURI"] = new BuiltInReference();
-	this.members["encodeURIComponent"] = new BuiltInReference();
-	this.members["Object"] = new BuiltInReference();
-	this.members["Function"] = new BuiltInReference();
-	this.members["Array"] = new BuiltInReference();
-	this.members["String"] = new BuiltInReference();
-	this.members["Boolean"] = new BuiltInReference();
-	this.members["Number"] = new BuiltInReference();
-	this.members["Date"] = new BuiltInReference();
-	this.members["RegExp"] = new BuiltInReference();
-	this.members["Error"] = new BuiltInReference();
-	this.members["EvalError"] = new BuiltInReference();
-	this.members["RangeError"] = new BuiltInReference();
-	this.members["ReferenceError"] = new BuiltInReference();
-	this.members["SyntaxError"] = new BuiltInReference();
-	this.members["TypeError"] = new BuiltInReference();
-	this.members["URIError"] = new BuiltInReference();
-	this.members["Math"] = new BuiltInReference();
-	this.members["JSON"] = new BuiltInReference();
+	this._members["NaN"] = new BuiltInReference();
+	this._members["Infinity"] = new BuiltInReference();
+	this._members["undefined"] = new BuiltInReference();
+	this._members["eval"] = new BuiltInReference();
+	this._members["parseInt"] = new BuiltInReference();
+	this._members["parseFloat"] = new BuiltInReference();
+	this._members["isNaN"] = new BuiltInReference();
+	this._members["isFinite"] = new BuiltInReference();
+	this._members["decodeURI"] = new BuiltInReference();
+	this._members["decodeURIComponent"] = new BuiltInReference();
+	this._members["encodeURI"] = new BuiltInReference();
+	this._members["encodeURIComponent"] = new BuiltInReference();
+	this._members["Object"] = new BuiltInReference();
+	this._members["Function"] = new BuiltInReference();
+	this._members["Array"] = new BuiltInReference();
+	this._members["String"] = new BuiltInReference();
+	this._members["Boolean"] = new BuiltInReference();
+	this._members["Number"] = new BuiltInReference();
+	this._members["Date"] = new BuiltInReference();
+	this._members["RegExp"] = new BuiltInReference();
+	this._members["Error"] = new BuiltInReference();
+	this._members["EvalError"] = new BuiltInReference();
+	this._members["RangeError"] = new BuiltInReference();
+	this._members["ReferenceError"] = new BuiltInReference();
+	this._members["SyntaxError"] = new BuiltInReference();
+	this._members["TypeError"] = new BuiltInReference();
+	this._members["URIError"] = new BuiltInReference();
+	this._members["Math"] = new BuiltInReference();
+	this._members["JSON"] = new BuiltInReference();
 }
 
 extend(Scope, GlobalScope);
 
 GlobalScope.prototype.lookupMember = function(id)
 {
-	return this.members[id] || (this.members[id] = new AutoGlobalReference());
+	return this._members[id] || (this._members[id] = new AutoGlobalReference());
 };
 
 
@@ -169,13 +169,13 @@ GlobalScope.prototype.lookupMember = function(id)
 
 function Reference(declaration)
 {
-	this.declaration = declaration || null;
-	this.references = [];
+	this._declaration = declaration || null;
+	this._references = [];
 }
 
 Reference.prototype.addReferrer = function(identifier)
 {
-	this.references.push(identifier);
+	this._references.push(identifier);
 };
 
 
@@ -205,7 +205,7 @@ function Program(json)
 {
 	Node.call(this, json);
 	
-	this.scope = null;
+	this._scope = null;
 }
 
 types.Program = extend(Node, Program);
@@ -214,16 +214,16 @@ Program.prototype.initialiseScope = function()
 {
 	var scope = new Scope(this, new GlobalScope());
 	
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseScope(scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseScope(scope);
 	
-	this.scope = scope;
+	this._scope = scope;
 };
 
 Program.prototype.initialiseReferences = function()
 {
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseReferences(this.scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseReferences(this._scope);
 };
 
 
@@ -258,14 +258,14 @@ types.VariableDeclaration = extend(Statement, VariableDeclaration);
 
 VariableDeclaration.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.declarations.length; i++)
-		this.declarations[i].initialiseScope(scope);
+	for (var i = 0; i < this._declarations.length; i++)
+		this._declarations[i].initialiseScope(scope);
 };
 
 VariableDeclaration.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.declarations.length; i++)
-		this.declarations[i].initialiseReferences(scope);
+	for (var i = 0; i < this._declarations.length; i++)
+		this._declarations[i].initialiseReferences(scope);
 };
 
 
@@ -280,20 +280,20 @@ types.VariableDeclarator = extend(Node, VariableDeclarator);
 
 VariableDeclarator.prototype.getId = function()
 {
-	return this.id.name;
+	return this._id._name;
 };
 
 VariableDeclarator.prototype.initialiseScope = function(scope)
 {
 	scope.addMember(this.getId(), new Reference(this));
-	if (this.init)
-		this.init.initialiseScope(scope);
+	if (this._init)
+		this._init.initialiseScope(scope);
 };
 
 VariableDeclarator.prototype.initialiseReferences = function(scope)
 {
-	if (this.init)
-		this.init.initialiseReferences(scope);
+	if (this._init)
+		this._init.initialiseReferences(scope);
 };
 
 
@@ -303,14 +303,14 @@ function FunctionDeclaration(json)
 {
 	Statement.call(this, json);
 	
-	this.scope = null;
+	this._scope = null;
 }
 
 types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
 
 FunctionDeclaration.prototype.getId = function()
 {
-	return this.id.name;
+	return this._id._name;
 };
 
 FunctionDeclaration.prototype.initialiseScope = function(parent)
@@ -320,23 +320,23 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	var scope = new Scope(this, parent);
 	
 	// add parameters
-	this.params.forEach(function(param) {
+	this._params.forEach(function(param) {
 		scope.addMember(param.name, new Reference());
 	});
 	
 	// add arguments object
-	// FIXME: this needs to be set inbetween the function and the variable declarations
+	// FIXME: this._needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseScope(scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseScope(scope);
 	
-	this.scope = scope;
+	this._scope = scope;
 };
 
 FunctionDeclaration.prototype.initialiseReferences = function(scope)
 {
-	this.body.initialiseReferences(this.scope);
+	this._body.initialiseReferences(this._scope);
 };
 
 
@@ -351,12 +351,12 @@ types.ExpressionStatement = extend(Statement, ExpressionStatement);
 
 ExpressionStatement.prototype.initialiseScope = function(scope)
 {
-	this.expression.initialiseScope(scope);
+	this._expression.initialiseScope(scope);
 };
 
 ExpressionStatement.prototype.initialiseReferences = function(scope)
 {
-	this.expression.initialiseReferences(scope);
+	this._expression.initialiseReferences(scope);
 };
 
 
@@ -371,18 +371,18 @@ types.IfStatement = extend(Statement, IfStatement);
 
 IfStatement.prototype.initialiseScope = function(scope)
 {
-	this.test.initialiseScope(scope);
-	this.consequent.initialiseScope(scope);
-	if (this.alternate)
-		this.alternate.initialiseScope(scope);
+	this._test.initialiseScope(scope);
+	this._consequent.initialiseScope(scope);
+	if (this._alternate)
+		this._alternate.initialiseScope(scope);
 };
 
 IfStatement.prototype.initialiseReferences = function(scope)
 {
-	this.test.initialiseReferences(scope);
-	this.consequent.initialiseReferences(scope);
-	if (this.alternate)
-		this.alternate.initialiseReferences(scope);
+	this._test.initialiseReferences(scope);
+	this._consequent.initialiseReferences(scope);
+	if (this._alternate)
+		this._alternate.initialiseReferences(scope);
 };
 
 
@@ -397,24 +397,24 @@ types.ForStatement = extend(Statement, ForStatement);
 
 ForStatement.prototype.initialiseScope = function(scope)
 {
-	if (this.init)
-		this.init.initialiseScope(scope);
-	if (this.test)
-		this.test.initialiseScope(scope);
-	if (this.update)
-		this.update.initialiseScope(scope);
-	this.body.initialiseScope(scope);
+	if (this._init)
+		this._init.initialiseScope(scope);
+	if (this._test)
+		this._test.initialiseScope(scope);
+	if (this._update)
+		this._update.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 ForStatement.prototype.initialiseReferences = function(scope)
 {
-	if (this.init)
-		this.init.initialiseReferences(scope);
-	if (this.test)
-		this.test.initialiseReferences(scope);
-	if (this.update)
-		this.update.initialiseReferences(scope);
-	this.body.initialiseReferences(scope);
+	if (this._init)
+		this._init.initialiseReferences(scope);
+	if (this._test)
+		this._test.initialiseReferences(scope);
+	if (this._update)
+		this._update.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -429,16 +429,16 @@ types.ForInStatement = extend(Statement, ForInStatement);
 
 ForInStatement.prototype.initialiseScope = function(scope)
 {
-	this.left.initialiseScope(scope);
-	this.right.initialiseScope(scope);
-	this.body.initialiseScope(scope);
+	this._left.initialiseScope(scope);
+	this._right.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 ForInStatement.prototype.initialiseReferences = function(scope)
 {
-	this.left.initialiseReferences(scope);
-	this.right.initialiseReferences(scope);
-	this.body.initialiseReferences(scope);
+	this._left.initialiseReferences(scope);
+	this._right.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -453,14 +453,14 @@ types.WhileStatement = extend(Statement, WhileStatement);
 
 WhileStatement.prototype.initialiseScope = function(scope)
 {
-	this.test.initialiseScope(scope);
-	this.body.initialiseScope(scope);
+	this._test.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 WhileStatement.prototype.initialiseReferences = function(scope)
 {
-	this.test.initialiseReferences(scope);
-	this.body.initialiseReferences(scope);
+	this._test.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -475,14 +475,14 @@ types.DoWhileStatement = extend(Statement, DoWhileStatement);
 
 DoWhileStatement.prototype.initialiseScope = function(scope)
 {
-	this.test.initialiseScope(scope);
-	this.body.initialiseScope(scope);
+	this._test.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 DoWhileStatement.prototype.initialiseReferences = function(scope)
 {
-	this.test.initialiseReferences(scope);
-	this.body.initialiseReferences(scope);
+	this._test.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -497,16 +497,16 @@ types.SwitchStatement = extend(Statement, SwitchStatement);
 
 SwitchStatement.prototype.initialiseScope = function(scope)
 {
-	this.discriminant.initialiseScope(scope);
-	for (var i = 0; i < this.cases.length; i++)
-		this.cases[i].initialiseScope(scope);
+	this._discriminant.initialiseScope(scope);
+	for (var i = 0; i < this._cases.length; i++)
+		this._cases[i].initialiseScope(scope);
 };
 
 SwitchStatement.prototype.initialiseReferences = function(scope)
 {
-	this.discriminant.initialiseReferences(scope);
-	for (var i = 0; i < this.cases.length; i++)
-		this.cases[i].initialiseReferences(scope);
+	this._discriminant.initialiseReferences(scope);
+	for (var i = 0; i < this._cases.length; i++)
+		this._cases[i].initialiseReferences(scope);
 };
 
 
@@ -521,14 +521,14 @@ types.SwitchCase = extend(Node, SwitchCase);
 
 SwitchCase.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.consequent.length; i++)
-		this.consequent[i].initialiseScope(scope);
+	for (var i = 0; i < this._consequent.length; i++)
+		this._consequent[i].initialiseScope(scope);
 };
 
 SwitchCase.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.consequent.length; i++)
-		this.consequent[i].initialiseReferences(scope);
+	for (var i = 0; i < this._consequent.length; i++)
+		this._consequent[i].initialiseReferences(scope);
 };
 
 
@@ -579,12 +579,12 @@ types.ThrowStatement = extend(Statement, ThrowStatement);
 
 ThrowStatement.prototype.initialiseScope = function(scope)
 {
-	this.argument.initialiseScope(scope);
+	this._argument.initialiseScope(scope);
 };
 
 ThrowStatement.prototype.initialiseReferences = function(scope)
 {
-	this.argument.initialiseReferences(scope);
+	this._argument.initialiseReferences(scope);
 };
 
 
@@ -599,20 +599,20 @@ types.TryStatement = extend(Statement, TryStatement);
 
 TryStatement.prototype.initialiseScope = function(scope)
 {
-	this.block.initialiseScope(scope);
-	for (var i = 0; i < this.handlers.length; i++)
-		this.handlers[i].initialiseScope(scope);
-	if (this.finalizer)
-		this.finalizer.initialiseScope(scope);
+	this._block.initialiseScope(scope);
+	for (var i = 0; i < this._handlers.length; i++)
+		this._handlers[i].initialiseScope(scope);
+	if (this._finalizer)
+		this._finalizer.initialiseScope(scope);
 };
 
 TryStatement.prototype.initialiseReferences = function(scope)
 {
-	this.block.initialiseReferences(scope);
-	for (var i = 0; i < this.handlers.length; i++)
-		this.handlers[i].initialiseReferences(scope);
-	if (this.finalizer)
-		this.finalizer.initialiseReferences(scope);
+	this._block.initialiseReferences(scope);
+	for (var i = 0; i < this._handlers.length; i++)
+		this._handlers[i].initialiseReferences(scope);
+	if (this._finalizer)
+		this._finalizer.initialiseReferences(scope);
 };
 
 
@@ -631,12 +631,12 @@ types.CatchClause = extend(Node, CatchClause);
 
 CatchClause.prototype.initialiseScope = function(scope)
 {
-	this.body.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 CatchClause.prototype.initialiseReferences = function(scope)
 {
-	this.body.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -651,14 +651,14 @@ types.BlockStatement = extend(Statement, BlockStatement);
 
 BlockStatement.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseScope(scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseScope(scope);
 };
 
 BlockStatement.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseReferences(scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseReferences(scope);
 };
 
 
@@ -673,14 +673,14 @@ types.ReturnStatement = extend(Statement, ReturnStatement);
 
 ReturnStatement.prototype.initialiseScope = function(scope)
 {
-	if (this.argument)
-		this.argument.initialiseScope(scope);
+	if (this._argument)
+		this._argument.initialiseScope(scope);
 };
 
 ReturnStatement.prototype.initialiseReferences = function(scope)
 {
-	if (this.argument)
-		this.argument.initialiseReferences(scope);
+	if (this._argument)
+		this._argument.initialiseReferences(scope);
 };
 
 
@@ -695,12 +695,12 @@ types.LabeledStatement = extend(Statement, LabeledStatement);
 
 LabeledStatement.prototype.initialiseScope = function(scope)
 {
-	this.body.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 LabeledStatement.prototype.initialiseReferences = function(scope)
 {
-	this.body.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -716,14 +716,14 @@ types.WithStatement = extend(Statement, WithStatement);
 WithStatement.prototype.initialiseScope = function(scope)
 {
 	// FIXME: the with statment establishes a scope of its own...
-	this.object.initialiseScope(scope);
-	this.body.initialiseScope(scope);
+	this._object.initialiseScope(scope);
+	this._body.initialiseScope(scope);
 };
 
 WithStatement.prototype.initialiseReferences = function(scope)
 {
-	this.object.initialiseReferences(scope);
-	this.body.initialiseReferences(scope);
+	this._object.initialiseReferences(scope);
+	this._body.initialiseReferences(scope);
 };
 
 
@@ -807,7 +807,7 @@ function Identifier(json)
 {
 	Expression.call(this, json);
 	
-	this.reference = null;
+	this._reference = null;
 }
 
 types.Identifier = extend(Expression, Identifier);
@@ -818,11 +818,11 @@ Identifier.prototype.initialiseScope = function(scope)
 
 Identifier.prototype.initialiseReferences = function(scope)
 {
-	var reference = scope.lookupMember(this.name);
+	var reference = scope.lookupMember(this._name);
 	if (!reference)
-		throw new Error("Reference not found for identifier " + this.name);
+		throw new Error("Reference not found for identifier " + this._name);
 
-	this.reference = reference;
+	this._reference = reference;
 	reference.addReferrer(this);
 };
 
@@ -838,12 +838,12 @@ types.MemberExpression = extend(Expression, MemberExpression);
 
 MemberExpression.prototype.initialiseScope = function(scope)
 {
-	this.object.initialiseScope(scope);
+	this._object.initialiseScope(scope);
 };
 
 MemberExpression.prototype.initialiseReferences = function(scope)
 {
-	this.object.initialiseReferences(scope);
+	this._object.initialiseReferences(scope);
 };
 
 
@@ -858,16 +858,16 @@ types.CallExpression = extend(Expression, CallExpression);
 
 CallExpression.prototype.initialiseScope = function(scope)
 {
-	this.callee.initialiseScope(scope);
-	for (var i = 0; i < this.arguments.length; i++)
-		this.arguments[i].initialiseScope(scope);
+	this._callee.initialiseScope(scope);
+	for (var i = 0; i < this._arguments.length; i++)
+		this._arguments[i].initialiseScope(scope);
 };
 
 CallExpression.prototype.initialiseReferences = function(scope)
 {
-	this.callee.initialiseReferences(scope);
-	for (var i = 0; i < this.arguments.length; i++)
-		this.arguments[i].initialiseReferences(scope);
+	this._callee.initialiseReferences(scope);
+	for (var i = 0; i < this._arguments.length; i++)
+		this._arguments[i].initialiseReferences(scope);
 };
 
 
@@ -882,14 +882,14 @@ types.AssignmentExpression = extend(Expression, AssignmentExpression);
 
 AssignmentExpression.prototype.initialiseScope = function(scope)
 {
-	this.left.initialiseScope(scope);
-	this.right.initialiseScope(scope);
+	this._left.initialiseScope(scope);
+	this._right.initialiseScope(scope);
 };
 
 AssignmentExpression.prototype.initialiseReferences = function(scope)
 {
-	this.left.initialiseReferences(scope);
-	this.right.initialiseReferences(scope);
+	this._left.initialiseReferences(scope);
+	this._right.initialiseReferences(scope);
 };
 
 
@@ -904,12 +904,12 @@ types.UpdateExpression = extend(Expression, UpdateExpression);
 
 UpdateExpression.prototype.initialiseScope = function(scope)
 {
-	this.argument.initialiseScope(scope);
+	this._argument.initialiseScope(scope);
 };
 
 UpdateExpression.prototype.initialiseReferences = function(scope)
 {
-	this.argument.initialiseReferences(scope);
+	this._argument.initialiseReferences(scope);
 };
 
 
@@ -924,12 +924,12 @@ types.NewExpression = extend(Expression, NewExpression);
 
 NewExpression.prototype.initialiseScope = function(scope)
 {
-	this.callee.initialiseScope(scope);
+	this._callee.initialiseScope(scope);
 };
 
 NewExpression.prototype.initialiseReferences = function(scope)
 {
-	this.callee.initialiseReferences(scope);
+	this._callee.initialiseReferences(scope);
 };
 
 
@@ -939,7 +939,7 @@ function ThisExpression(json)
 {
 	Expression.call(this, json);
 	
-	this.reference = null;
+	this._reference = null;
 }
 
 types.ThisExpression = extend(Expression, ThisExpression);
@@ -950,8 +950,8 @@ ThisExpression.prototype.initialiseScope = function(scope)
 
 ThisExpression.prototype.initialiseReferences = function(scope)
 {
-	this.reference = scope.lookupMember("this");
-	this.reference.addReferrer(this);
+	this._reference = scope.lookupMember("this");
+	this._reference.addReferrer(this);
 };
 
 
@@ -966,12 +966,12 @@ types.UnaryExpression = extend(Expression, UnaryExpression);
 
 UnaryExpression.prototype.initialiseScope = function(scope)
 {
-	this.argument.initialiseScope(scope);
+	this._argument.initialiseScope(scope);
 };
 
 UnaryExpression.prototype.initialiseReferences = function(scope)
 {
-	this.argument.initialiseReferences(scope);
+	this._argument.initialiseReferences(scope);
 };
 
 
@@ -986,14 +986,14 @@ types.BinaryExpression = extend(Expression, BinaryExpression);
 
 BinaryExpression.prototype.initialiseScope = function(scope)
 {
-	this.left.initialiseScope(scope);
-	this.right.initialiseScope(scope);
+	this._left.initialiseScope(scope);
+	this._right.initialiseScope(scope);
 };
 
 BinaryExpression.prototype.initialiseReferences = function(scope)
 {
-	this.left.initialiseReferences(scope);
-	this.right.initialiseReferences(scope);
+	this._left.initialiseReferences(scope);
+	this._right.initialiseReferences(scope);
 };
 
 
@@ -1008,16 +1008,16 @@ types.ConditionalExpression = extend(Expression, ConditionalExpression);
 
 ConditionalExpression.prototype.initialiseScope = function(scope)
 {
-	this.test.initialiseScope(scope);
-	this.consequent.initialiseScope(scope);
-	this.alternate.initialiseScope(scope);
+	this._test.initialiseScope(scope);
+	this._consequent.initialiseScope(scope);
+	this._alternate.initialiseScope(scope);
 };
 
 ConditionalExpression.prototype.initialiseReferences = function(scope)
 {
-	this.test.initialiseReferences(scope);
-	this.consequent.initialiseReferences(scope);
-	this.alternate.initialiseReferences(scope);
+	this._test.initialiseReferences(scope);
+	this._consequent.initialiseReferences(scope);
+	this._alternate.initialiseReferences(scope);
 };
 
 
@@ -1032,14 +1032,14 @@ types.LogicalExpression = extend(Expression, LogicalExpression);
 
 LogicalExpression.prototype.initialiseScope = function(scope)
 {
-	this.left.initialiseScope(scope);
-	this.right.initialiseScope(scope);
+	this._left.initialiseScope(scope);
+	this._right.initialiseScope(scope);
 };
 
 LogicalExpression.prototype.initialiseReferences = function(scope)
 {
-	this.left.initialiseReferences(scope);
-	this.right.initialiseReferences(scope);
+	this._left.initialiseReferences(scope);
+	this._right.initialiseReferences(scope);
 };
 
 
@@ -1054,14 +1054,14 @@ types.ArrayExpression = extend(Expression, ArrayExpression);
 
 ArrayExpression.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.elements.length; i++)
-		this.elements[i].initialiseScope(scope);
+	for (var i = 0; i < this._elements.length; i++)
+		this._elements[i].initialiseScope(scope);
 };
 
 ArrayExpression.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.elements.length; i++)
-		this.elements[i].initialiseReferences(scope);
+	for (var i = 0; i < this._elements.length; i++)
+		this._elements[i].initialiseReferences(scope);
 };
 
 
@@ -1071,51 +1071,51 @@ function FunctionExpression(json)
 {
 	Expression.call(this, json);
 	
-	this.scope = null;
+	this._scope = null;
 }
 
 types.FunctionExpression = extend(Expression, FunctionExpression);
 
 FunctionExpression.prototype.getId = function()
 {
-	return this.id && this.id.name || null;
+	return this._id && this._id._name || null;
 };
 
 FunctionExpression.prototype.initialiseScope = function(parent)
 {
-	if (this.id)
+	if (this._id)
 	{
 		// insert wrapper scope for the identifier
 		// XXX: what about the identifier on object getters/setters?
 		parent = new Scope(this, parent);
-		parent.addMember(this.id.name, new Reference(this));
+		parent.addMember(this._id._name, new Reference(this));
 	}
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
-	this.params.forEach(function(param) {
-		scope.addMember(param.name, new Reference());
+	this._params.forEach(function(param) {
+		scope.addMember(param._name, new Reference());
 	});
 	
 	// add arguments object
-	// FIXME: this needs to be set inbetween the function and the variable declarations
+	// FIXME: this._needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].initialiseScope(scope);
+	for (var i = 0; i < this._body.length; i++)
+		this._body[i].initialiseScope(scope);
 	
 	// add parameters
-	this.params.forEach(function(param) {
-		scope.addMember(param.name, new Reference());
+	this._params.forEach(function(param) {
+		scope.addMember(param._name, new Reference());
 	});
 	
-	this.scope = scope;
+	this._scope = scope;
 };
 
 FunctionExpression.prototype.initialiseReferences = function(scope)
 {
-	this.body.initialiseReferences(this.scope);
+	this._body.initialiseReferences(this._scope);
 };
 
 
@@ -1134,14 +1134,14 @@ types.ObjectExpression = extend(Expression, ObjectExpression);
 
 ObjectExpression.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.properties.length; i++)
-		this.properties[i].initialiseScope(scope);
+	for (var i = 0; i < this._properties.length; i++)
+		this._properties[i].initialiseScope(scope);
 };
 
 ObjectExpression.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.properties.length; i++)
-		this.properties[i].initialiseReferences(scope);
+	for (var i = 0; i < this._properties.length; i++)
+		this._properties[i].initialiseReferences(scope);
 };
 
 
@@ -1160,12 +1160,12 @@ types.Property = extend(Node, Property);
 
 Property.prototype.initialiseScope = function(scope)
 {
-	this.value.initialiseScope(scope);
+	this._value.initialiseScope(scope);
 };
 
 Property.prototype.initialiseReferences = function(scope)
 {
-	this.value.initialiseReferences(scope);
+	this._value.initialiseReferences(scope);
 };
 
 
@@ -1180,14 +1180,14 @@ types.SequenceExpression = extend(Expression, SequenceExpression);
 
 SequenceExpression.prototype.initialiseScope = function(scope)
 {
-	for (var i = 0; i < this.expressions.length; i++)
-		this.expressions[i].initialiseScope(scope);
+	for (var i = 0; i < this._expressions.length; i++)
+		this._expressions[i].initialiseScope(scope);
 };
 
 SequenceExpression.prototype.initialiseReferences = function(scope)
 {
-	for (var i = 0; i < this.expressions.length; i++)
-		this.expressions[i].initialiseReferences(scope);
+	for (var i = 0; i < this._expressions.length; i++)
+		this._expressions[i].initialiseReferences(scope);
 };
 
 
