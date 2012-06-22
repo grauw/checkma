@@ -461,6 +461,12 @@ function LabeledStatement(json)
 
 types.LabeledStatement = extend(Statement, LabeledStatement);
 
+LabeledStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
+
 
 
 
