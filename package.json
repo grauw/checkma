@@ -1,0 +1,18 @@
+{
+	"name": "check-code",
+	"version": "0.1.0",
+	"author": "Laurens Holst",
+	"description": "A JavaScript static analyzer.",
+	"license": "Apache 2.0",
+	"keywords": [
+		"javascript",
+		"static-analysis"
+	],
+	"dependencies": {
+		"esprima": "0.9.x"
+	},
+	"repository": {
+		"type": "mercurial",
+		"url": "https://hg.grauw.nl/check-code/"
+	}
+}
