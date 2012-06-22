@@ -126,7 +126,35 @@ Scope.prototype.addMember = function(id, reference)
 function GlobalScope()
 {
 	Scope.call(this, null, null);
+	this.members["NaN"] = new Reference();
+	this.members["Infinity"] = new Reference();
 	this.members["undefined"] = new Reference();
+	this.members["eval"] = new Reference();
+	this.members["parseInt"] = new Reference();
+	this.members["parseFloat"] = new Reference();
+	this.members["isNaN"] = new Reference();
+	this.members["isFinite"] = new Reference();
+	this.members["decodeURI"] = new Reference();
+	this.members["decodeURIComponent"] = new Reference();
+	this.members["encodeURI"] = new Reference();
+	this.members["encodeURIComponent"] = new Reference();
+	this.members["Object"] = new Reference();
+	this.members["Function"] = new Reference();
+	this.members["Array"] = new Reference();
+	this.members["String"] = new Reference();
+	this.members["Boolean"] = new Reference();
+	this.members["Number"] = new Reference();
+	this.members["Date"] = new Reference();
+	this.members["RegExp"] = new Reference();
+	this.members["Error"] = new Reference();
+	this.members["EvalError"] = new Reference();
+	this.members["RangeError"] = new Reference();
+	this.members["ReferenceError"] = new Reference();
+	this.members["SyntaxError"] = new Reference();
+	this.members["TypeError"] = new Reference();
+	this.members["URIError"] = new Reference();
+	this.members["Math"] = new Reference();
+	this.members["JSON"] = new Reference();
 }
 
 extend(Scope, GlobalScope);
