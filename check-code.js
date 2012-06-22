@@ -84,7 +84,7 @@ function Scope(parent)
 {
 	this.parent = parent || null;
 	this.members = {};
-	this.addMember("this", new Reference());
+	this.members["this"] = new Reference();
 }
 
 Scope.prototype.lookupMember = function(id)
@@ -103,7 +103,7 @@ Scope.prototype.addMember = function(id, reference)
 function GlobalScope()
 {
 	Scope.call(this, null);
-	this.addMember("undefined", new Reference());
+	this.members["undefined"] = new Reference();
 }
 
 extend(Scope, GlobalScope);
