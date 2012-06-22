@@ -1153,12 +1153,12 @@ function Property(json)
 
 types.Property = extend(Node, Property);
 
-ObjectExpression.prototype.initialiseScope = function(scope)
+Property.prototype.initialiseScope = function(scope)
 {
 	this.value.initialiseScope(scope);
 };
 
-ObjectExpression.prototype.initialiseReferences = function(scope)
+Property.prototype.initialiseReferences = function(scope)
 {
 	this.value.initialiseReferences(scope);
 };
