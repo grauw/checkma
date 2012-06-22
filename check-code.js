@@ -195,18 +195,13 @@ types.VariableDeclaration = extend(Statement, VariableDeclaration);
 VariableDeclaration.prototype.initialiseScope = function(scope)
 {
 	for (var i = 0; i < this.declarations.length; i++)
-	{
-		scope.addMember(this.declarations[i].getId(), new Reference(this.declarations[i]));
-		if (this.declarations[i].init)
-			this.declarations[i].init.initialiseScope(scope);
-	}
+		this.declarations[i].initialiseScope(scope);
 };
 
 VariableDeclaration.prototype.initialiseReferences = function(scope)
 {
 	for (var i = 0; i < this.declarations.length; i++)
-		if (this.declarations[i].init)
-			this.declarations[i].init.initialiseReferences(scope);
+		this.declarations[i].initialiseReferences(scope);
 };
 
 
@@ -222,6 +217,19 @@ types.VariableDeclarator = extend(Node, VariableDeclarator);
 VariableDeclarator.prototype.getId = function()
 {
 	return this.id.name;
+};
+
+VariableDeclarator.prototype.initialiseScope = function(scope)
+{
+	scope.addMember(this.getId(), new Reference(this));
+	if (this.init)
+		this.init.initialiseScope(scope);
+};
+
+VariableDeclarator.prototype.initialiseReferences = function(scope)
+{
+	if (this.init)
+		this.init.initialiseReferences(scope);
 };
 
 
@@ -427,16 +435,14 @@ SwitchStatement.prototype.initialiseScope = function(scope)
 {
 	this.discriminant.initialiseScope(scope);
 	for (var i = 0; i < this.cases.length; i++)
-		for (var j = 0; j < this.cases[i].consequent.length; j++)
-			this.cases[i].consequent[j].initialiseScope(scope);
+		this.cases[i].initialiseScope(scope);
 };
 
 SwitchStatement.prototype.initialiseReferences = function(scope)
 {
 	this.discriminant.initialiseReferences(scope);
 	for (var i = 0; i < this.cases.length; i++)
-		for (var j = 0; j < this.cases[i].consequent.length; j++)
-			this.cases[i].consequent[j].initialiseReferences(scope);
+		this.cases[i].initialiseReferences(scope);
 };
 
 
@@ -448,6 +454,18 @@ function SwitchCase(json)
 }
 
 types.SwitchCase = extend(Node, SwitchCase);
+
+SwitchStatement.prototype.initialiseScope = function(scope)
+{
+	for (var i = 0; i < this.consequent.length; i++)
+		this.consequent[i].initialiseScope(scope);
+};
+
+SwitchStatement.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.consequent.length; i++)
+		this.consequent[i].initialiseReferences(scope);
+};
 
 
 
@@ -1048,13 +1066,13 @@ types.ObjectExpression = extend(Expression, ObjectExpression);
 ObjectExpression.prototype.initialiseScope = function(scope)
 {
 	for (var i = 0; i < this.properties.length; i++)
-		this.properties[i].value.initialiseScope(scope);
+		this.properties[i].initialiseScope(scope);
 };
 
 ObjectExpression.prototype.initialiseReferences = function(scope)
 {
 	for (var i = 0; i < this.properties.length; i++)
-		this.properties[i].value.initialiseReferences(scope);
+		this.properties[i].initialiseReferences(scope);
 };
 
 
@@ -1070,6 +1088,16 @@ function Property(json)
 }
 
 types.Property = extend(Node, Property);
+
+ObjectExpression.prototype.initialiseScope = function(scope)
+{
+	this.value.initialiseScope(scope);
+};
+
+ObjectExpression.prototype.initialiseReferences = function(scope)
+{
+	this.value.initialiseReferences(scope);
+};
 
 
 
