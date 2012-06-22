@@ -22,12 +22,12 @@ function main()
 			{
 				var name = scope instanceof GlobalScope ? "global" : scope.owner && (scope.owner instanceof Program ? "program" : scope.owner.getId && scope.owner.getId() || scope.owner.constructor.name);
 				
-				if (scope.members[member].references.length == 0)
+				if (!(scope.members[member] instanceof BuiltInReference) && scope.members[member].references.length == 0)
 				{
 					console.log("Scope", name, "member", member, "is not referenced.");
 				}
 				
-				if (scope.members[member].autoGlobal)
+				if (scope.members[member] instanceof AutoGlobalReference)
 				{
 					console.log("Scope", name, "member", member, "is a global.");
 				}
@@ -126,48 +126,42 @@ Scope.prototype.addMember = function(id, reference)
 function GlobalScope()
 {
 	Scope.call(this, null, null);
-	this.members["NaN"] = new Reference();
-	this.members["Infinity"] = new Reference();
-	this.members["undefined"] = new Reference();
-	this.members["eval"] = new Reference();
-	this.members["parseInt"] = new Reference();
-	this.members["parseFloat"] = new Reference();
-	this.members["isNaN"] = new Reference();
-	this.members["isFinite"] = new Reference();
-	this.members["decodeURI"] = new Reference();
-	this.members["decodeURIComponent"] = new Reference();
-	this.members["encodeURI"] = new Reference();
-	this.members["encodeURIComponent"] = new Reference();
-	this.members["Object"] = new Reference();
-	this.members["Function"] = new Reference();
-	this.members["Array"] = new Reference();
-	this.members["String"] = new Reference();
-	this.members["Boolean"] = new Reference();
-	this.members["Number"] = new Reference();
-	this.members["Date"] = new Reference();
-	this.members["RegExp"] = new Reference();
-	this.members["Error"] = new Reference();
-	this.members["EvalError"] = new Reference();
-	this.members["RangeError"] = new Reference();
-	this.members["ReferenceError"] = new Reference();
-	this.members["SyntaxError"] = new Reference();
-	this.members["TypeError"] = new Reference();
-	this.members["URIError"] = new Reference();
-	this.members["Math"] = new Reference();
-	this.members["JSON"] = new Reference();
+	this.members["NaN"] = new BuiltInReference();
+	this.members["Infinity"] = new BuiltInReference();
+	this.members["undefined"] = new BuiltInReference();
+	this.members["eval"] = new BuiltInReference();
+	this.members["parseInt"] = new BuiltInReference();
+	this.members["parseFloat"] = new BuiltInReference();
+	this.members["isNaN"] = new BuiltInReference();
+	this.members["isFinite"] = new BuiltInReference();
+	this.members["decodeURI"] = new BuiltInReference();
+	this.members["decodeURIComponent"] = new BuiltInReference();
+	this.members["encodeURI"] = new BuiltInReference();
+	this.members["encodeURIComponent"] = new BuiltInReference();
+	this.members["Object"] = new BuiltInReference();
+	this.members["Function"] = new BuiltInReference();
+	this.members["Array"] = new BuiltInReference();
+	this.members["String"] = new BuiltInReference();
+	this.members["Boolean"] = new BuiltInReference();
+	this.members["Number"] = new BuiltInReference();
+	this.members["Date"] = new BuiltInReference();
+	this.members["RegExp"] = new BuiltInReference();
+	this.members["Error"] = new BuiltInReference();
+	this.members["EvalError"] = new BuiltInReference();
+	this.members["RangeError"] = new BuiltInReference();
+	this.members["ReferenceError"] = new BuiltInReference();
+	this.members["SyntaxError"] = new BuiltInReference();
+	this.members["TypeError"] = new BuiltInReference();
+	this.members["URIError"] = new BuiltInReference();
+	this.members["Math"] = new BuiltInReference();
+	this.members["JSON"] = new BuiltInReference();
 }
 
 extend(Scope, GlobalScope);
 
 GlobalScope.prototype.lookupMember = function(id)
 {
-	if (this.members[id])
-		return this.members[id];
-	
-	var reference = new Reference();
-	reference.autoGlobal = true;
-	this.members[id] = reference;
-	return reference;
+	return this.members[id] || (this.members[id] = new AutoGlobalReference());
 };
 
 
@@ -183,6 +177,26 @@ Reference.prototype.addReferrer = function(identifier)
 {
 	this.references.push(identifier);
 };
+
+
+
+
+function BuiltInReference(declaration)
+{
+	Reference.call(this, declaration);
+}
+
+extend(Reference, BuiltInReference);
+
+
+
+
+function AutoGlobalReference(declaration)
+{
+	Reference.call(this, declaration);
+}
+
+extend(Reference, AutoGlobalReference);
 
 
 
