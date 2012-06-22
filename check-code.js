@@ -645,6 +645,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	if (this.id)
 	{
 		// insert wrapper scope for the identifier
+		// XXX: what about the identifier on object getters/setters?
 		parent = new Scope(parent);
 		parent.addMember(this.id.name, new Reference(this));
 	}
