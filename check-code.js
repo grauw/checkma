@@ -11,6 +11,8 @@ function main()
 	var ast = esprima.parse(content);
 
 	var program = new Program(ast);
+	
+	program.initialiseScope();
 
 	console.log(program.scope);
 }
@@ -122,8 +124,6 @@ function Program(json)
 	Node.call(this, json);
 	
 	this.scope = null;
-	
-	this.initialiseScope();
 }
 
 types.Program = extend(Node, Program);
