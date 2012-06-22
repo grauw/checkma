@@ -146,28 +146,12 @@ function Program(json)
 
 types.Program = extend(Node, Program);
 
-Program.prototype.traverseStatements = function(callback)
-{
-	for (var i = 0; i < this.body.length; i++)
-		this.body[i].traverseStatements(callback);
-};
-
 Program.prototype.initialiseScope = function()
 {
 	var scope = new Scope(new GlobalScope());
 	
-	// add function declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof FunctionDeclaration)
-			scope.addMember(statement.getId(), new Reference(statement));
-	});
-	
-	// add variable declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof VariableDeclaration)
-			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
-	});
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].initialiseScope(scope);
 	
 	this.scope = scope;
 };
@@ -188,9 +172,9 @@ function Statement(json)
 
 extend(Node, Statement);
 
-Statement.prototype.traverseStatements = function(callback)
+Statement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
+	throw new Error("Must implement initialiseScope().");
 };
 
 Statement.prototype.initialiseReferences = function(scope)
@@ -208,10 +192,21 @@ function VariableDeclaration(json)
 
 types.VariableDeclaration = extend(Statement, VariableDeclaration);
 
+VariableDeclaration.prototype.initialiseScope = function(scope)
+{
+	for (var i = 0; i < this.declarations.length; i++)
+	{
+		scope.addMember(this.declarations[i].getId(), new Reference(this.declarations[i]));
+		if (this.declarations[i].init)
+			this.declarations[i].init.initialiseScope(scope);
+	}
+};
+
 VariableDeclaration.prototype.initialiseReferences = function(scope)
 {
 	for (var i = 0; i < this.declarations.length; i++)
-		this.declarations[i].init.initialiseReferences(scope);
+		if (this.declarations[i].init)
+			this.declarations[i].init.initialiseReferences(scope);
 };
 
 
@@ -248,6 +243,8 @@ FunctionDeclaration.prototype.getId = function()
 
 FunctionDeclaration.prototype.initialiseScope = function(parent)
 {
+	parent.addMember(this.getId(), new Reference(this));
+	
 	var scope = new Scope(parent);
 	
 	// add parameters
@@ -255,21 +252,12 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 		scope.addMember(param.name, new Reference());
 	});
 	
-	// add function declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof FunctionDeclaration)
-			scope.addMember(statement.getId(), new Reference(statement));
-	});
-	
 	// add arguments object
+	// FIXME: this needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	// add variable declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof VariableDeclaration)
-			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
-	});
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].initialiseScope(scope);
 	
 	this.scope = scope;
 };
@@ -289,6 +277,11 @@ function ExpressionStatement(json)
 
 types.ExpressionStatement = extend(Statement, ExpressionStatement);
 
+ExpressionStatement.prototype.initialiseScope = function(scope)
+{
+	this.expression.initialiseScope(scope);
+};
+
 ExpressionStatement.prototype.initialiseReferences = function(scope)
 {
 	this.expression.initialiseReferences(scope);
@@ -304,12 +297,12 @@ function IfStatement(json)
 
 types.IfStatement = extend(Statement, IfStatement);
 
-IfStatement.prototype.traverseStatements = function(callback)
+IfStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.consequent.traverseStatements(callback);
+	this.test.initialiseScope(scope);
+	this.consequent.initialiseScope(scope);
 	if (this.alternate)
-		this.alternate.traverseStatements(callback);
+		this.alternate.initialiseScope(scope);
 };
 
 IfStatement.prototype.initialiseReferences = function(scope)
@@ -330,10 +323,15 @@ function ForStatement(json)
 
 types.ForStatement = extend(Statement, ForStatement);
 
-ForStatement.prototype.traverseStatements = function(callback)
+ForStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	if (this.init)
+		this.init.initialiseScope(scope);
+	if (this.test)
+		this.test.initialiseScope(scope);
+	if (this.update)
+		this.update.initialiseScope(scope);
+	this.body.initialiseScope(scope);
 };
 
 ForStatement.prototype.initialiseReferences = function(scope)
@@ -357,10 +355,11 @@ function ForInStatement(json)
 
 types.ForInStatement = extend(Statement, ForInStatement);
 
-ForInStatement.prototype.traverseStatements = function(callback)
+ForInStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	this.left.initialiseScope(scope);
+	this.right.initialiseScope(scope);
+	this.body.initialiseScope(scope);
 };
 
 ForInStatement.prototype.initialiseReferences = function(scope)
@@ -380,10 +379,10 @@ function WhileStatement(json)
 
 types.WhileStatement = extend(Statement, WhileStatement);
 
-WhileStatement.prototype.traverseStatements = function(callback)
+WhileStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	this.test.initialiseScope(scope);
+	this.body.initialiseScope(scope);
 };
 
 WhileStatement.prototype.initialiseReferences = function(scope)
@@ -402,10 +401,10 @@ function DoWhileStatement(json)
 
 types.DoWhileStatement = extend(Statement, DoWhileStatement);
 
-DoWhileStatement.prototype.traverseStatements = function(callback)
+DoWhileStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	this.test.initialiseScope(scope);
+	this.body.initialiseScope(scope);
 };
 
 DoWhileStatement.prototype.initialiseReferences = function(scope)
@@ -424,12 +423,12 @@ function SwitchStatement(json)
 
 types.SwitchStatement = extend(Statement, SwitchStatement);
 
-SwitchStatement.prototype.traverseStatements = function(callback)
+SwitchStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
+	this.discriminant.initialiseScope(scope);
 	for (var i = 0; i < this.cases.length; i++)
 		for (var j = 0; j < this.cases[i].consequent.length; j++)
-			this.cases[i].consequent[j].traverseStatements(callback);
+			this.cases[i].consequent[j].initialiseScope(scope);
 };
 
 SwitchStatement.prototype.initialiseReferences = function(scope)
@@ -460,6 +459,10 @@ function BreakStatement(json)
 
 types.BreakStatement = extend(Statement, BreakStatement);
 
+BreakStatement.prototype.initialiseScope = function(scope)
+{
+};
+
 BreakStatement.prototype.initialiseReferences = function(scope)
 {
 };
@@ -474,6 +477,10 @@ function ContinueStatement(json)
 
 types.ContinueStatement = extend(Statement, ContinueStatement);
 
+ContinueStatement.prototype.initialiseScope = function(scope)
+{
+};
+
 ContinueStatement.prototype.initialiseReferences = function(scope)
 {
 };
@@ -487,6 +494,11 @@ function ThrowStatement(json)
 }
 
 types.ThrowStatement = extend(Statement, ThrowStatement);
+
+ThrowStatement.prototype.initialiseScope = function(scope)
+{
+	this.argument.initialiseScope(scope);
+};
 
 ThrowStatement.prototype.initialiseReferences = function(scope)
 {
@@ -503,14 +515,13 @@ function TryStatement(json)
 
 types.TryStatement = extend(Statement, TryStatement);
 
-TryStatement.prototype.traverseStatements = function(callback)
+TryStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.block.traverseStatements(callback);
+	this.block.initialiseScope(scope);
 	for (var i = 0; i < this.handlers.length; i++)
-		this.handlers[i].body.traverseStatements(callback);
+		this.handlers[i].initialiseScope(scope);
 	if (this.finalizer)
-		this.finalizer.traverseStatements(callback);
+		this.finalizer.initialiseScope(scope);
 };
 
 TryStatement.prototype.initialiseReferences = function(scope)
@@ -536,6 +547,11 @@ function CatchClause(json)
 
 types.CatchClause = extend(Node, CatchClause);
 
+CatchClause.prototype.initialiseScope = function(scope)
+{
+	this.body.initialiseScope(scope);
+};
+
 CatchClause.prototype.initialiseReferences = function(scope)
 {
 	this.body.initialiseReferences(scope);
@@ -551,11 +567,10 @@ function BlockStatement(json)
 
 types.BlockStatement = extend(Statement, BlockStatement);
 
-BlockStatement.prototype.traverseStatements = function(callback)
+BlockStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
 	for (var i = 0; i < this.body.length; i++)
-		this.body[i].traverseStatements(callback);
+		this.body[i].initialiseScope(scope);
 };
 
 BlockStatement.prototype.initialiseReferences = function(scope)
@@ -574,9 +589,16 @@ function ReturnStatement(json)
 
 types.ReturnStatement = extend(Statement, ReturnStatement);
 
+ReturnStatement.prototype.initialiseScope = function(scope)
+{
+	if (this.argument)
+		this.argument.initialiseScope(scope);
+};
+
 ReturnStatement.prototype.initialiseReferences = function(scope)
 {
-	this.argument.initialiseReferences(scope);
+	if (this.argument)
+		this.argument.initialiseReferences(scope);
 };
 
 
@@ -589,10 +611,9 @@ function LabeledStatement(json)
 
 types.LabeledStatement = extend(Statement, LabeledStatement);
 
-LabeledStatement.prototype.traverseStatements = function(callback)
+LabeledStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	this.body.initialiseScope(scope);
 };
 
 LabeledStatement.prototype.initialiseReferences = function(scope)
@@ -610,10 +631,10 @@ function WithStatement(json)
 
 types.WithStatement = extend(Statement, WithStatement);
 
-WithStatement.prototype.traverseStatements = function(callback)
+WithStatement.prototype.initialiseScope = function(scope)
 {
-	callback(this);
-	this.body.traverseStatements(callback);
+	this.object.initialiseScope(scope);
+	this.body.initialiseScope(scope);
 };
 
 WithStatement.prototype.initialiseReferences = function(scope)
@@ -632,6 +653,10 @@ function DebuggerStatement(json)
 
 types.DebuggerStatement = extend(Statement, DebuggerStatement);
 
+DebuggerStatement.prototype.initialiseScope = function(scope)
+{
+};
+
 DebuggerStatement.prototype.initialiseReferences = function(scope)
 {
 };
@@ -646,6 +671,10 @@ function EmptyStatement(json)
 
 types.EmptyStatement = extend(Statement, EmptyStatement);
 
+EmptyStatement.prototype.initialiseScope = function(scope)
+{
+};
+
 EmptyStatement.prototype.initialiseReferences = function(scope)
 {
 };
@@ -659,6 +688,11 @@ function Expression(json)
 }
 
 extend(Node, Expression);
+
+Expression.prototype.initialiseScope = function(scope)
+{
+	throw new Error("Must implement initialiseScope().");
+};
 
 Expression.prototype.initialiseReferences = function(scope)
 {
@@ -675,6 +709,10 @@ function Literal(json)
 
 types.Literal = extend(Expression, Literal);
 
+Literal.prototype.initialiseScope = function(scope)
+{
+};
+
 Literal.prototype.initialiseReferences = function(scope)
 {
 };
@@ -690,6 +728,10 @@ function Identifier(json)
 }
 
 types.Identifier = extend(Expression, Identifier);
+
+Identifier.prototype.initialiseScope = function(scope)
+{
+};
 
 Identifier.prototype.initialiseReferences = function(scope)
 {
@@ -711,6 +753,11 @@ function MemberExpression(json)
 
 types.MemberExpression = extend(Expression, MemberExpression);
 
+MemberExpression.prototype.initialiseScope = function(scope)
+{
+	this.object.initialiseScope(scope);
+};
+
 MemberExpression.prototype.initialiseReferences = function(scope)
 {
 	this.object.initialiseReferences(scope);
@@ -726,6 +773,11 @@ function CallExpression(json)
 
 types.CallExpression = extend(Expression, CallExpression);
 
+CallExpression.prototype.initialiseScope = function(scope)
+{
+	this.callee.initialiseScope(scope);
+};
+
 CallExpression.prototype.initialiseReferences = function(scope)
 {
 	this.callee.initialiseReferences(scope);
@@ -740,6 +792,12 @@ function AssignmentExpression(json)
 }
 
 types.AssignmentExpression = extend(Expression, AssignmentExpression);
+
+AssignmentExpression.prototype.initialiseScope = function(scope)
+{
+	this.left.initialiseScope(scope);
+	this.right.initialiseScope(scope);
+};
 
 AssignmentExpression.prototype.initialiseReferences = function(scope)
 {
@@ -757,6 +815,11 @@ function UpdateExpression(json)
 
 types.UpdateExpression = extend(Expression, UpdateExpression);
 
+UpdateExpression.prototype.initialiseScope = function(scope)
+{
+	this.argument.initialiseScope(scope);
+};
+
 UpdateExpression.prototype.initialiseReferences = function(scope)
 {
 	this.argument.initialiseReferences(scope);
@@ -771,6 +834,11 @@ function NewExpression(json)
 }
 
 types.NewExpression = extend(Expression, NewExpression);
+
+NewExpression.prototype.initialiseScope = function(scope)
+{
+	this.callee.initialiseScope(scope);
+};
 
 NewExpression.prototype.initialiseReferences = function(scope)
 {
@@ -789,6 +857,10 @@ function ThisExpression(json)
 
 types.ThisExpression = extend(Expression, ThisExpression);
 
+ThisExpression.prototype.initialiseScope = function(scope)
+{
+};
+
 ThisExpression.prototype.initialiseReferences = function(scope)
 {
 	this.reference = scope.lookupMember("this");
@@ -805,6 +877,11 @@ function UnaryExpression(json)
 
 types.UnaryExpression = extend(Expression, UnaryExpression);
 
+UnaryExpression.prototype.initialiseScope = function(scope)
+{
+	this.argument.initialiseScope(scope);
+};
+
 UnaryExpression.prototype.initialiseReferences = function(scope)
 {
 	this.argument.initialiseReferences(scope);
@@ -819,6 +896,12 @@ function BinaryExpression(json)
 }
 
 types.BinaryExpression = extend(Expression, BinaryExpression);
+
+BinaryExpression.prototype.initialiseScope = function(scope)
+{
+	this.left.initialiseScope(scope);
+	this.right.initialiseScope(scope);
+};
 
 BinaryExpression.prototype.initialiseReferences = function(scope)
 {
@@ -835,6 +918,13 @@ function ConditionalExpression(json)
 }
 
 types.ConditionalExpression = extend(Expression, ConditionalExpression);
+
+ConditionalExpression.prototype.initialiseScope = function(scope)
+{
+	this.test.initialiseScope(scope);
+	this.consequent.initialiseScope(scope);
+	this.alternate.initialiseScope(scope);
+};
 
 ConditionalExpression.prototype.initialiseReferences = function(scope)
 {
@@ -853,6 +943,12 @@ function LogicalExpression(json)
 
 types.LogicalExpression = extend(Expression, LogicalExpression);
 
+LogicalExpression.prototype.initialiseScope = function(scope)
+{
+	this.left.initialiseScope(scope);
+	this.right.initialiseScope(scope);
+};
+
 LogicalExpression.prototype.initialiseReferences = function(scope)
 {
 	this.left.initialiseReferences(scope);
@@ -868,6 +964,12 @@ function ArrayExpression(json)
 }
 
 types.ArrayExpression = extend(Expression, ArrayExpression);
+
+ArrayExpression.prototype.initialiseScope = function(scope)
+{
+	for (var i = 0; i < this.elements.length; i++)
+		this.elements[i].initialiseScope(scope);
+};
 
 ArrayExpression.prototype.initialiseReferences = function(scope)
 {
@@ -909,20 +1011,16 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 		scope.addMember(param.name, new Reference());
 	});
 	
-	// add function declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof FunctionDeclaration)
-			scope.addMember(statement.getId(), new Reference(statement));
-	});
-	
 	// add arguments object
+	// FIXME: this needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	// add variable declarations
-	this.traverseStatements(function(statement) {
-		if (statement instanceof VariableDeclaration)
-			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].initialiseScope(scope);
+	
+	// add parameters
+	this.params.forEach(function(param) {
+		scope.addMember(param.name, new Reference());
 	});
 	
 	this.scope = scope;
@@ -946,6 +1044,12 @@ function ObjectExpression(json)
 }
 
 types.ObjectExpression = extend(Expression, ObjectExpression);
+
+ObjectExpression.prototype.initialiseScope = function(scope)
+{
+	for (var i = 0; i < this.properties.length; i++)
+		this.properties[i].value.initialiseScope(scope);
+};
 
 ObjectExpression.prototype.initialiseReferences = function(scope)
 {
@@ -976,6 +1080,12 @@ function SequenceExpression(json)
 }
 
 types.SequenceExpression = extend(Expression, SequenceExpression);
+
+SequenceExpression.prototype.initialiseScope = function(scope)
+{
+	for (var i = 0; i < this.expressions.length; i++)
+		this.expressions[i].initialiseScope(scope);
+};
 
 SequenceExpression.prototype.initialiseReferences = function(scope)
 {
