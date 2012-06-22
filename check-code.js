@@ -859,11 +859,15 @@ types.CallExpression = extend(Expression, CallExpression);
 CallExpression.prototype.initialiseScope = function(scope)
 {
 	this.callee.initialiseScope(scope);
+	for (var i = 0; i < this.arguments.length; i++)
+		this.arguments[i].initialiseScope(scope);
 };
 
 CallExpression.prototype.initialiseReferences = function(scope)
 {
 	this.callee.initialiseReferences(scope);
+	for (var i = 0; i < this.arguments.length; i++)
+		this.arguments[i].initialiseReferences(scope);
 };
 
 
