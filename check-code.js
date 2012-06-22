@@ -400,6 +400,16 @@ function TryStatement(json)
 
 types.TryStatement = extend(Statement, TryStatement);
 
+TryStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.block.traverseStatements(callback);
+	for (var i = 0; i < this.handlers.length; i++)
+		this.handlers[i].body.traverseStatements(callback);
+	if (this.finalizer)
+		this.finalizer.traverseStatements(callback);
+};
+
 
 
 
