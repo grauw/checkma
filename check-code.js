@@ -81,17 +81,17 @@ var types = {};
 function Scope(parent)
 {
 	this.parent = parent || null;
-	this.identifiers = {};
+	this.members = {};
 }
 
-Scope.prototype.getIdentifier = function(id)
+Scope.prototype.getMember = function(id)
 {
-	return this.identifiers[id] || null;
+	return this.members[id] || null;
 };
 
-Scope.prototype.addIdentifier = function(id, reference)
+Scope.prototype.addMember = function(id, reference)
 {
-	this.identifiers[id] = reference;
+	this.members[id] = reference;
 };
 
 
@@ -100,7 +100,7 @@ Scope.prototype.addIdentifier = function(id, reference)
 function GlobalScope()
 {
 	Scope.call(this, null);
-	this.addIdentifier("undefined", new Reference());
+	this.addMember("undefined", new Reference());
 }
 
 extend(Scope, GlobalScope);
@@ -140,14 +140,14 @@ Program.prototype.initialiseScope = function()
 	// add function declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof FunctionDeclaration)
-			scope.addIdentifier(statement.getId(), new Reference(statement));
+			scope.addMember(statement.getId(), new Reference(statement));
 	});
 	
 	// add variable declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof VariableDeclaration)
 			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
 	});
 	
 	this.scope = scope;
@@ -217,23 +217,23 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this.params.forEach(function(param) {
-		scope.addIdentifier(param.name, new Reference());
+		scope.addMember(param.name, new Reference());
 	});
 	
 	// add function declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof FunctionDeclaration)
-			scope.addIdentifier(statement.getId(), new Reference(statement));
+			scope.addMember(statement.getId(), new Reference(statement));
 	});
 	
 	// add arguments object
-	scope.addIdentifier("arguments", new Reference());
+	scope.addMember("arguments", new Reference());
 	
 	// add variable declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof VariableDeclaration)
 			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
 	});
 	
 	this.scope = scope;
@@ -643,30 +643,30 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	{
 		// insert wrapper scope for the identifier
 		parent = new Scope(parent);
-		parent.addIdentifier(this.id.name, new Reference(this));
+		parent.addMember(this.id.name, new Reference(this));
 	}
 	
 	var scope = new Scope(parent);
 	
 	// add parameters
 	this.params.forEach(function(param) {
-		scope.addIdentifier(param.name, new Reference());
+		scope.addMember(param.name, new Reference());
 	});
 	
 	// add function declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof FunctionDeclaration)
-			scope.addIdentifier(statement.getId(), new Reference(statement));
+			scope.addMember(statement.getId(), new Reference(statement));
 	});
 	
 	// add arguments object
-	scope.addIdentifier("arguments", new Reference());
+	scope.addMember("arguments", new Reference());
 	
 	// add variable declarations
 	this.traverseStatements(function(statement) {
 		if (statement instanceof VariableDeclaration)
 			for (var i = 0; i < statement.declarations.length; i++)
-				scope.addIdentifier(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
+				scope.addMember(statement.declarations[i].getId(), new Reference(statement.declarations[i]));
 	});
 	
 	this.scope = scope;
