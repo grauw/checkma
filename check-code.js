@@ -12,12 +12,6 @@ function main()
 
 	var program = new Program(ast);
 
-	console.log(program);
-	
-	program.traverseStatements(function(statement) {
-		console.log(statement);
-	});
-	
 	console.log(program.scope);
 }
 
