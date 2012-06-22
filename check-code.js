@@ -18,11 +18,11 @@ function main()
 	scopes.forEach(function(scope) {
 		for (var member in scope._members)
 		{
-			if (member != "this" && member != "arguments" && member != "undefined")
+			if (!(scope._members[member] instanceof BuiltInReference))
 			{
 				var name = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
 				
-				if (!(scope._members[member] instanceof BuiltInReference) && scope._members[member]._references.length == 0)
+				if (scope._members[member]._references.length == 0)
 				{
 					console.log("Scope", name, "member", member, "is not referenced.");
 				}
@@ -107,7 +107,7 @@ function Scope(owner, parent)
 	this._owner = owner;
 	this._parent = parent || null;
 	this._members = {};
-	this._members["this"] = new Reference();
+	this._members["this"] = new BuiltInReference();
 }
 
 Scope.prototype.lookupMember = function(id)
@@ -326,7 +326,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.addMember("arguments", new Reference());
+	scope.addMember("arguments", new BuiltInReference());
 	
 	this._body.initialiseScope(scope);
 	
