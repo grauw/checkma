@@ -16,18 +16,18 @@ function main()
 	program.initialiseReferences();
 
 	scopes.forEach(function(scope) {
-		for (var member in scope.members)
+		for (var member in scope._members)
 		{
 			if (member != "this" && member != "arguments" && member != "undefined")
 			{
-				var name = scope instanceof GlobalScope ? "global" : scope.owner && (scope.owner instanceof Program ? "program" : scope.owner.getId && scope.owner.getId() || scope.owner.constructor.name);
+				var name = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
 				
-				if (!(scope.members[member] instanceof BuiltInReference) && scope.members[member].references.length == 0)
+				if (!(scope._members[member] instanceof BuiltInReference) && scope._members[member]._references.length == 0)
 				{
 					console.log("Scope", name, "member", member, "is not referenced.");
 				}
 				
-				if (scope.members[member] instanceof AutoGlobalReference)
+				if (scope._members[member] instanceof AutoGlobalReference)
 				{
 					console.log("Scope", name, "member", member, "is a global.");
 				}
