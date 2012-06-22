@@ -13,6 +13,7 @@ function main()
 	var program = new Program(ast);
 	
 	program.initialiseScope();
+	program.initialiseReferences();
 
 	console.log(program.scope);
 }
@@ -108,13 +109,30 @@ function GlobalScope()
 
 extend(Scope, GlobalScope);
 
+GlobalScope.prototype.lookupMember = function(id)
+{
+	if (this.members[id])
+		return this.members[id];
+	
+	var reference = new Reference();
+	reference.autoGlobal = true;
+	this.members[id] = reference;
+	return reference;
+};
+
 
 
 
 function Reference(declaration)
 {
 	this.declaration = declaration || null;
+	this.references = [];
 }
+
+Reference.prototype.addReferrer = function(identifier)
+{
+	this.references.push(identifier);
+};
 
 
 
@@ -154,6 +172,11 @@ Program.prototype.initialiseScope = function()
 	this.scope = scope;
 };
 
+Program.prototype.initialiseReferences = function()
+{
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].initialiseReferences(this.scope);
+};
 
 
 
@@ -170,6 +193,11 @@ Statement.prototype.traverseStatements = function(callback)
 	callback(this);
 };
 
+Statement.prototype.initialiseReferences = function(scope)
+{
+	throw new Error("Must implement initialiseReferences().");
+};
+
 
 
 
@@ -179,6 +207,12 @@ function VariableDeclaration(json)
 }
 
 types.VariableDeclaration = extend(Statement, VariableDeclaration);
+
+VariableDeclaration.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.declarations.length; i++)
+		this.declarations[i].init.initialiseReferences(scope);
+};
 
 
 
@@ -240,6 +274,11 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	this.scope = scope;
 };
 
+FunctionDeclaration.prototype.initialiseReferences = function(scope)
+{
+	this.body.initialiseReferences(this.scope);
+};
+
 
 
 
@@ -249,6 +288,11 @@ function ExpressionStatement(json)
 }
 
 types.ExpressionStatement = extend(Statement, ExpressionStatement);
+
+ExpressionStatement.prototype.initialiseReferences = function(scope)
+{
+	this.expression.initialiseReferences(scope);
+};
 
 
 
@@ -268,6 +312,14 @@ IfStatement.prototype.traverseStatements = function(callback)
 		this.alternate.traverseStatements(callback);
 };
 
+IfStatement.prototype.initialiseReferences = function(scope)
+{
+	this.test.initialiseReferences(scope);
+	this.consequent.initialiseReferences(scope);
+	if (this.alternate)
+		this.alternate.initialiseReferences(scope);
+};
+
 
 
 
@@ -282,6 +334,17 @@ ForStatement.prototype.traverseStatements = function(callback)
 {
 	callback(this);
 	this.body.traverseStatements(callback);
+};
+
+ForStatement.prototype.initialiseReferences = function(scope)
+{
+	if (this.init)
+		this.init.initialiseReferences(scope);
+	if (this.test)
+		this.test.initialiseReferences(scope);
+	if (this.update)
+		this.update.initialiseReferences(scope);
+	this.body.initialiseReferences(scope);
 };
 
 
@@ -300,6 +363,13 @@ ForInStatement.prototype.traverseStatements = function(callback)
 	this.body.traverseStatements(callback);
 };
 
+ForInStatement.prototype.initialiseReferences = function(scope)
+{
+	this.left.initialiseReferences(scope);
+	this.right.initialiseReferences(scope);
+	this.body.initialiseReferences(scope);
+};
+
 
 
 
@@ -314,6 +384,12 @@ WhileStatement.prototype.traverseStatements = function(callback)
 {
 	callback(this);
 	this.body.traverseStatements(callback);
+};
+
+WhileStatement.prototype.initialiseReferences = function(scope)
+{
+	this.test.initialiseReferences(scope);
+	this.body.initialiseReferences(scope);
 };
 
 
@@ -332,6 +408,12 @@ DoWhileStatement.prototype.traverseStatements = function(callback)
 	this.body.traverseStatements(callback);
 };
 
+DoWhileStatement.prototype.initialiseReferences = function(scope)
+{
+	this.test.initialiseReferences(scope);
+	this.body.initialiseReferences(scope);
+};
+
 
 
 
@@ -348,6 +430,14 @@ SwitchStatement.prototype.traverseStatements = function(callback)
 	for (var i = 0; i < this.cases.length; i++)
 		for (var j = 0; j < this.cases[i].consequent.length; j++)
 			this.cases[i].consequent[j].traverseStatements(callback);
+};
+
+SwitchStatement.prototype.initialiseReferences = function(scope)
+{
+	this.discriminant.initialiseReferences(scope);
+	for (var i = 0; i < this.cases.length; i++)
+		for (var j = 0; j < this.cases[i].consequent.length; j++)
+			this.cases[i].consequent[j].initialiseReferences(scope);
 };
 
 
@@ -370,6 +460,10 @@ function BreakStatement(json)
 
 types.BreakStatement = extend(Statement, BreakStatement);
 
+BreakStatement.prototype.initialiseReferences = function(scope)
+{
+};
+
 
 
 
@@ -380,6 +474,10 @@ function ContinueStatement(json)
 
 types.ContinueStatement = extend(Statement, ContinueStatement);
 
+ContinueStatement.prototype.initialiseReferences = function(scope)
+{
+};
+
 
 
 
@@ -389,6 +487,11 @@ function ThrowStatement(json)
 }
 
 types.ThrowStatement = extend(Statement, ThrowStatement);
+
+ThrowStatement.prototype.initialiseReferences = function(scope)
+{
+	this.argument.initialiseReferences(scope);
+};
 
 
 
@@ -410,6 +513,15 @@ TryStatement.prototype.traverseStatements = function(callback)
 		this.finalizer.traverseStatements(callback);
 };
 
+TryStatement.prototype.initialiseReferences = function(scope)
+{
+	this.block.initialiseReferences(scope);
+	for (var i = 0; i < this.handlers.length; i++)
+		this.handlers[i].initialiseReferences(scope);
+	if (this.finalizer)
+		this.finalizer.initialiseReferences(scope);
+};
+
 
 
 
@@ -423,6 +535,11 @@ function CatchClause(json)
 }
 
 types.CatchClause = extend(Node, CatchClause);
+
+CatchClause.prototype.initialiseReferences = function(scope)
+{
+	this.body.initialiseReferences(scope);
+};
 
 
 
@@ -441,6 +558,12 @@ BlockStatement.prototype.traverseStatements = function(callback)
 		this.body[i].traverseStatements(callback);
 };
 
+BlockStatement.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.body.length; i++)
+		this.body[i].initialiseReferences(scope);
+};
+
 
 
 
@@ -450,6 +573,11 @@ function ReturnStatement(json)
 }
 
 types.ReturnStatement = extend(Statement, ReturnStatement);
+
+ReturnStatement.prototype.initialiseReferences = function(scope)
+{
+	this.argument.initialiseReferences(scope);
+};
 
 
 
@@ -465,6 +593,11 @@ LabeledStatement.prototype.traverseStatements = function(callback)
 {
 	callback(this);
 	this.body.traverseStatements(callback);
+};
+
+LabeledStatement.prototype.initialiseReferences = function(scope)
+{
+	this.body.initialiseReferences(scope);
 };
 
 
@@ -483,6 +616,12 @@ WithStatement.prototype.traverseStatements = function(callback)
 	this.body.traverseStatements(callback);
 };
 
+WithStatement.prototype.initialiseReferences = function(scope)
+{
+	this.object.initialiseReferences(scope);
+	this.body.initialiseReferences(scope);
+};
+
 
 
 
@@ -492,6 +631,10 @@ function DebuggerStatement(json)
 }
 
 types.DebuggerStatement = extend(Statement, DebuggerStatement);
+
+DebuggerStatement.prototype.initialiseReferences = function(scope)
+{
+};
 
 
 
@@ -503,6 +646,10 @@ function EmptyStatement(json)
 
 types.EmptyStatement = extend(Statement, EmptyStatement);
 
+EmptyStatement.prototype.initialiseReferences = function(scope)
+{
+};
+
 
 
 
@@ -513,6 +660,11 @@ function Expression(json)
 
 extend(Node, Expression);
 
+Expression.prototype.initialiseReferences = function(scope)
+{
+	throw new Error("Must implement initialiseReferences().");
+};
+
 
 
 
@@ -522,6 +674,10 @@ function Literal(json)
 }
 
 types.Literal = extend(Expression, Literal);
+
+Literal.prototype.initialiseReferences = function(scope)
+{
+};
 
 
 
@@ -535,6 +691,16 @@ function Identifier(json)
 
 types.Identifier = extend(Expression, Identifier);
 
+Identifier.prototype.initialiseReferences = function(scope)
+{
+	var reference = scope.lookupMember(this.name);
+	if (!reference)
+		throw new Error("Reference not found for identifier " + this.name);
+
+	this.reference = reference;
+	reference.addReferrer(this);
+};
+
 
 
 
@@ -544,6 +710,11 @@ function MemberExpression(json)
 }
 
 types.MemberExpression = extend(Expression, MemberExpression);
+
+MemberExpression.prototype.initialiseReferences = function(scope)
+{
+	this.object.initialiseReferences(scope);
+};
 
 
 
@@ -555,6 +726,11 @@ function CallExpression(json)
 
 types.CallExpression = extend(Expression, CallExpression);
 
+CallExpression.prototype.initialiseReferences = function(scope)
+{
+	this.callee.initialiseReferences(scope);
+};
+
 
 
 
@@ -564,6 +740,12 @@ function AssignmentExpression(json)
 }
 
 types.AssignmentExpression = extend(Expression, AssignmentExpression);
+
+AssignmentExpression.prototype.initialiseReferences = function(scope)
+{
+	this.left.initialiseReferences(scope);
+	this.right.initialiseReferences(scope);
+};
 
 
 
@@ -575,6 +757,11 @@ function UpdateExpression(json)
 
 types.UpdateExpression = extend(Expression, UpdateExpression);
 
+UpdateExpression.prototype.initialiseReferences = function(scope)
+{
+	this.argument.initialiseReferences(scope);
+};
+
 
 
 
@@ -585,15 +772,28 @@ function NewExpression(json)
 
 types.NewExpression = extend(Expression, NewExpression);
 
+NewExpression.prototype.initialiseReferences = function(scope)
+{
+	this.callee.initialiseReferences(scope);
+};
+
 
 
 
 function ThisExpression(json)
 {
 	Expression.call(this, json);
+	
+	this.reference = null;
 }
 
 types.ThisExpression = extend(Expression, ThisExpression);
+
+ThisExpression.prototype.initialiseReferences = function(scope)
+{
+	this.reference = scope.lookupMember("this");
+	this.reference.addReferrer(this);
+};
 
 
 
@@ -605,6 +805,11 @@ function UnaryExpression(json)
 
 types.UnaryExpression = extend(Expression, UnaryExpression);
 
+UnaryExpression.prototype.initialiseReferences = function(scope)
+{
+	this.argument.initialiseReferences(scope);
+};
+
 
 
 
@@ -614,6 +819,12 @@ function BinaryExpression(json)
 }
 
 types.BinaryExpression = extend(Expression, BinaryExpression);
+
+BinaryExpression.prototype.initialiseReferences = function(scope)
+{
+	this.left.initialiseReferences(scope);
+	this.right.initialiseReferences(scope);
+};
 
 
 
@@ -625,6 +836,13 @@ function ConditionalExpression(json)
 
 types.ConditionalExpression = extend(Expression, ConditionalExpression);
 
+ConditionalExpression.prototype.initialiseReferences = function(scope)
+{
+	this.test.initialiseReferences(scope);
+	this.consequent.initialiseReferences(scope);
+	this.alternate.initialiseReferences(scope);
+};
+
 
 
 
@@ -635,6 +853,12 @@ function LogicalExpression(json)
 
 types.LogicalExpression = extend(Expression, LogicalExpression);
 
+LogicalExpression.prototype.initialiseReferences = function(scope)
+{
+	this.left.initialiseReferences(scope);
+	this.right.initialiseReferences(scope);
+};
+
 
 
 
@@ -644,6 +868,12 @@ function ArrayExpression(json)
 }
 
 types.ArrayExpression = extend(Expression, ArrayExpression);
+
+ArrayExpression.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.elements.length; i++)
+		this.elements[i].initialiseReferences(scope);
+};
 
 
 
@@ -698,6 +928,11 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	this.scope = scope;
 };
 
+FunctionExpression.prototype.initialiseReferences = function(scope)
+{
+	this.body.initialiseReferences(this.scope);
+};
+
 
 
 
@@ -711,6 +946,12 @@ function ObjectExpression(json)
 }
 
 types.ObjectExpression = extend(Expression, ObjectExpression);
+
+ObjectExpression.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.properties.length; i++)
+		this.properties[i].value.initialiseReferences(scope);
+};
 
 
 
@@ -735,6 +976,12 @@ function SequenceExpression(json)
 }
 
 types.SequenceExpression = extend(Expression, SequenceExpression);
+
+SequenceExpression.prototype.initialiseReferences = function(scope)
+{
+	for (var i = 0; i < this.expressions.length; i++)
+		this.expressions[i].initialiseReferences(scope);
+};
 
 
 
