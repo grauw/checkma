@@ -84,9 +84,9 @@ function Scope(parent)
 	this.members = {};
 }
 
-Scope.prototype.getMember = function(id)
+Scope.prototype.lookupMember = function(id)
 {
-	return this.members[id] || null;
+	return this.members[id] || (this.parent && this.parent.lookupMember(id)) || null;
 };
 
 Scope.prototype.addMember = function(id, reference)
