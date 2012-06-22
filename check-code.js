@@ -81,8 +81,9 @@ var types = {};
 
 
 
-function Scope(parent)
+function Scope(owner, parent)
 {
+	this.owner = owner;
 	this.parent = parent || null;
 	this.members = {};
 	this.members["this"] = new Reference();
@@ -103,7 +104,7 @@ Scope.prototype.addMember = function(id, reference)
 
 function GlobalScope()
 {
-	Scope.call(this, null);
+	Scope.call(this, null, null);
 	this.members["undefined"] = new Reference();
 }
 
@@ -148,7 +149,7 @@ types.Program = extend(Node, Program);
 
 Program.prototype.initialiseScope = function()
 {
-	var scope = new Scope(new GlobalScope());
+	var scope = new Scope(this, new GlobalScope());
 	
 	for (var i = 0; i < this.body.length; i++)
 		this.body[i].initialiseScope(scope);
@@ -253,7 +254,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 {
 	parent.addMember(this.getId(), new Reference(this));
 	
-	var scope = new Scope(parent);
+	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this.params.forEach(function(param) {
@@ -1018,11 +1019,11 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	{
 		// insert wrapper scope for the identifier
 		// XXX: what about the identifier on object getters/setters?
-		parent = new Scope(parent);
+		parent = new Scope(this, parent);
 		parent.addMember(this.id.name, new Reference(this));
 	}
 	
-	var scope = new Scope(parent);
+	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this.params.forEach(function(param) {
