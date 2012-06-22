@@ -715,6 +715,7 @@ types.WithStatement = extend(Statement, WithStatement);
 
 WithStatement.prototype.initialiseScope = function(scope)
 {
+	// FIXME: the with statment establishes a scope of its own...
 	this.object.initialiseScope(scope);
 	this.body.initialiseScope(scope);
 };
