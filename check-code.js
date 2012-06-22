@@ -519,13 +519,13 @@ function SwitchCase(json)
 
 types.SwitchCase = extend(Node, SwitchCase);
 
-SwitchStatement.prototype.initialiseScope = function(scope)
+SwitchCase.prototype.initialiseScope = function(scope)
 {
 	for (var i = 0; i < this.consequent.length; i++)
 		this.consequent[i].initialiseScope(scope);
 };
 
-SwitchStatement.prototype.initialiseReferences = function(scope)
+SwitchCase.prototype.initialiseReferences = function(scope)
 {
 	for (var i = 0; i < this.consequent.length; i++)
 		this.consequent[i].initialiseReferences(scope);
