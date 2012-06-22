@@ -477,6 +477,12 @@ function WithStatement(json)
 
 types.WithStatement = extend(Statement, WithStatement);
 
+WithStatement.prototype.traverseStatements = function(callback)
+{
+	callback(this);
+	this.body.traverseStatements(callback);
+};
+
 
 
 
