@@ -483,16 +483,6 @@ types.EmptyStatement = extend(Statement, EmptyStatement);
 
 
 
-function Identifier(json)
-{
-	Node.call(this, json);
-}
-
-types.Identifier = extend(Node, Identifier);
-
-
-
-
 function Literal(json)
 {
 	Node.call(this, json);
@@ -509,6 +499,16 @@ function Expression(json)
 }
 
 extend(Node, Expression);
+
+
+
+
+function Identifier(json)
+{
+	Expression.call(this, json);
+}
+
+types.Identifier = extend(Expression, Identifier);
 
 
 
