@@ -328,8 +328,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	for (var i = 0; i < this._body.length; i++)
-		this._body[i].initialiseScope(scope);
+	this._body.initialiseScope(scope);
 	
 	this._scope = scope;
 };
@@ -1102,8 +1101,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
 	scope.addMember("arguments", new Reference());
 	
-	for (var i = 0; i < this._body.length; i++)
-		this._body[i].initialiseScope(scope);
+	this._body.initialiseScope(scope);
 	
 	// add parameters
 	this._params.forEach(function(param) {
