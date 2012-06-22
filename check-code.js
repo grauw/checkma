@@ -82,6 +82,7 @@ function Scope(parent)
 {
 	this.parent = parent || null;
 	this.members = {};
+	this.addMember("this", new Reference());
 }
 
 Scope.prototype.lookupMember = function(id)
