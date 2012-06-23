@@ -225,6 +225,7 @@ function Variable(name, declaration)
 	this._name = name;
 	this._declaration = declaration || null;
 	this._references = [];
+	this._assignments = [];
 }
 
 Variable.prototype.getName = function()
@@ -243,7 +244,16 @@ Variable.prototype.isReferenced = function()
 	return this._references.length > 0;
 };
 
+Variable.prototype.addAssignment = function(identifier)
+{
+	checkTypes(arguments, AssignmentExpression);
+	this._assignments.push(identifier);
+};
 
+Variable.prototype.isModified = function()
+{
+	return this._assignments.length > 0;
+};
 
 
 
@@ -929,6 +939,11 @@ Identifier.prototype.getName = function()
 	return this._name;
 };
 
+Identifier.prototype.getVariable = function()
+{
+	return this._variable;
+};
+
 Identifier.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
@@ -1015,6 +1030,9 @@ AssignmentExpression.prototype.initialiseReferences = function(scope)
 	checkTypes(arguments, Scope);
 	this._left.initialiseReferences(scope);
 	this._right.initialiseReferences(scope);
+	
+	if (this._left instanceof Identifier)
+		this._left.getVariable().addAssignment(this);
 };
 
 
