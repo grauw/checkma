@@ -144,6 +144,8 @@ Scope.prototype.lookupMember = function(id)
 Scope.prototype.setMember = function(id, variable)
 {
 	checkTypes(arguments, "string", Variable);
+	if (this._members.hasOwnProperty(id))
+		throw new Error("Member " + id + " already exists.");
 	this._members[id] = variable;
 };
 
