@@ -16,23 +16,22 @@ function main()
 	program.initialiseReferences();
 
 	scopes.forEach(function(scope) {
-		for (var member in scope._members)
-		{
-			if (!(scope._members[member] instanceof BuiltInVariable))
+		scope.getMembers().forEach(function(member) {
+			if (!(member instanceof BuiltInVariable))
 			{
 				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
 				
-				if (!scope._members[member].isReferenced())
+				if (!member.isReferenced())
 				{
-					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member, scopeName));
+					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member.getName(), scopeName));
 				}
 				
-				if (scope._members[member] instanceof AutoGlobalVariable)
+				if (member instanceof AutoGlobalVariable)
 				{
-					console.log(format("New global variable \"%1\".", member));
+					console.log(format("New global variable \"%1\".", member.getName()));
 				}
 			}
-		}
+		});
 	});
 }
 
@@ -142,6 +141,14 @@ function Scope(owner, parent)
 	this._members = {};
 	this.addMember(new BuiltInVariable("this"));
 }
+
+Scope.prototype.getMembers = function()
+{
+	var members = [];
+	for (var name in this._members)
+		members.push(this._members[name]);
+	return members;
+};
 
 Scope.prototype.getMember = function(id)
 {
