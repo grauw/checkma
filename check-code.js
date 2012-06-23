@@ -310,7 +310,7 @@ types.VariableDeclarator = extend(Node, VariableDeclarator);
 
 VariableDeclarator.prototype.getId = function()
 {
-	return this._id._name;
+	return this._id.getName();
 };
 
 VariableDeclarator.prototype.initialiseScope = function(scope)
@@ -342,7 +342,7 @@ types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
 
 FunctionDeclaration.prototype.getId = function()
 {
-	return this._id._name;
+	return this._id.getName();
 };
 
 FunctionDeclaration.prototype.initialiseScope = function(parent)
@@ -354,7 +354,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.setMember(param._name, new Variable());
+		scope.setMember(param.getName(), new Variable());
 	});
 	
 	// add arguments object
