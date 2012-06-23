@@ -1211,11 +1211,6 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	
 	this._body.initialiseScope(scope);
 	
-	// add parameters
-	this._params.forEach(function(param) {
-		scope.setMember(param.getName(), new Variable());
-	});
-	
 	this._scope = scope;
 };
 
