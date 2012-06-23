@@ -219,6 +219,7 @@ function Variable(declaration)
 
 Variable.prototype.addReferrer = function(identifier)
 {
+	checkTypes(arguments, [Node]);  // Identifier or ThisExpression
 	this._references.push(identifier);
 };
 
