@@ -20,11 +20,11 @@ function main()
 		{
 			if (!(scope._members[member] instanceof BuiltInVariable))
 			{
-				var name = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
+				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
 				
 				if (scope._members[member]._references.length == 0)
 				{
-					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member, name));
+					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member, scopeName));
 				}
 				
 				if (scope._members[member] instanceof AutoGlobalVariable)
