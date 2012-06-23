@@ -140,7 +140,7 @@ function Scope(owner, parent)
 	this._owner = owner;
 	this._parent = parent || null;
 	this._members = {};
-	this._members["this"] = new BuiltInVariable();
+	this.addMember(new BuiltInVariable("this"));
 }
 
 Scope.prototype.getMember = function(id)
@@ -155,12 +155,13 @@ Scope.prototype.lookupMember = function(id)
 	return this._members.hasOwnProperty(id) ? this._members[id] : this._parent && this._parent.lookupMember(id);
 };
 
-Scope.prototype.setMember = function(id, variable)
+Scope.prototype.addMember = function(variable)
 {
-	checkTypes(arguments, "string", Variable);
-	if (this._members.hasOwnProperty(id))
-		throw new Error("Member " + id + " already exists.");
-	this._members[id] = variable;
+	checkTypes(arguments, Variable);
+	if (this._members.hasOwnProperty(variable.getName()))
+		throw new Error("Member " + variable.getName() + " already exists.");
+	this._members[variable.getName()] = variable;
+	return variable;
 };
 
 
@@ -169,35 +170,35 @@ Scope.prototype.setMember = function(id, variable)
 function GlobalScope()
 {
 	Scope.call(this, null, null);
-	this._members["NaN"] = new BuiltInVariable();
-	this._members["Infinity"] = new BuiltInVariable();
-	this._members["undefined"] = new BuiltInVariable();
-	this._members["eval"] = new BuiltInVariable();
-	this._members["parseInt"] = new BuiltInVariable();
-	this._members["parseFloat"] = new BuiltInVariable();
-	this._members["isNaN"] = new BuiltInVariable();
-	this._members["isFinite"] = new BuiltInVariable();
-	this._members["decodeURI"] = new BuiltInVariable();
-	this._members["decodeURIComponent"] = new BuiltInVariable();
-	this._members["encodeURI"] = new BuiltInVariable();
-	this._members["encodeURIComponent"] = new BuiltInVariable();
-	this._members["Object"] = new BuiltInVariable();
-	this._members["Function"] = new BuiltInVariable();
-	this._members["Array"] = new BuiltInVariable();
-	this._members["String"] = new BuiltInVariable();
-	this._members["Boolean"] = new BuiltInVariable();
-	this._members["Number"] = new BuiltInVariable();
-	this._members["Date"] = new BuiltInVariable();
-	this._members["RegExp"] = new BuiltInVariable();
-	this._members["Error"] = new BuiltInVariable();
-	this._members["EvalError"] = new BuiltInVariable();
-	this._members["RangeError"] = new BuiltInVariable();
-	this._members["ReferenceError"] = new BuiltInVariable();
-	this._members["SyntaxError"] = new BuiltInVariable();
-	this._members["TypeError"] = new BuiltInVariable();
-	this._members["URIError"] = new BuiltInVariable();
-	this._members["Math"] = new BuiltInVariable();
-	this._members["JSON"] = new BuiltInVariable();
+	this.addMember(new BuiltInVariable("NaN"));
+	this.addMember(new BuiltInVariable("Infinity"));
+	this.addMember(new BuiltInVariable("undefined"));
+	this.addMember(new BuiltInVariable("eval"));
+	this.addMember(new BuiltInVariable("parseInt"));
+	this.addMember(new BuiltInVariable("parseFloat"));
+	this.addMember(new BuiltInVariable("isNaN"));
+	this.addMember(new BuiltInVariable("isFinite"));
+	this.addMember(new BuiltInVariable("decodeURI"));
+	this.addMember(new BuiltInVariable("decodeURIComponent"));
+	this.addMember(new BuiltInVariable("encodeURI"));
+	this.addMember(new BuiltInVariable("encodeURIComponent"));
+	this.addMember(new BuiltInVariable("Object"));
+	this.addMember(new BuiltInVariable("Function"));
+	this.addMember(new BuiltInVariable("Array"));
+	this.addMember(new BuiltInVariable("String"));
+	this.addMember(new BuiltInVariable("Boolean"));
+	this.addMember(new BuiltInVariable("Number"));
+	this.addMember(new BuiltInVariable("Date"));
+	this.addMember(new BuiltInVariable("RegExp"));
+	this.addMember(new BuiltInVariable("Error"));
+	this.addMember(new BuiltInVariable("EvalError"));
+	this.addMember(new BuiltInVariable("RangeError"));
+	this.addMember(new BuiltInVariable("ReferenceError"));
+	this.addMember(new BuiltInVariable("SyntaxError"));
+	this.addMember(new BuiltInVariable("TypeError"));
+	this.addMember(new BuiltInVariable("URIError"));
+	this.addMember(new BuiltInVariable("Math"));
+	this.addMember(new BuiltInVariable("JSON"));
 }
 
 extend(Scope, GlobalScope);
@@ -205,17 +206,24 @@ extend(Scope, GlobalScope);
 GlobalScope.prototype.lookupMember = function(id)
 {
 	checkTypes(arguments, "string");
-	return this._members.hasOwnProperty(id) ? this._members[id] : (this._members[id] = new AutoGlobalVariable());
+	return this._members.hasOwnProperty(id) ? this._members[id] : this.addMember(new AutoGlobalVariable(id));
 };
 
 
 
 
-function Variable(declaration)
+function Variable(name, declaration)
 {
+	checkTypes(arguments, "string", [Node]);
+	this._name = name;
 	this._declaration = declaration || null;
 	this._references = [];
 }
+
+Variable.prototype.getName = function()
+{
+	return this._name;
+};
 
 Variable.prototype.addReferrer = function(identifier)
 {
@@ -231,9 +239,11 @@ Variable.prototype.isReferenced = function()
 
 
 
-function BuiltInVariable(declaration)
+
+
+function BuiltInVariable(name, declaration)
 {
-	Variable.call(this, declaration);
+	Variable.call(this, name, declaration);
 }
 
 extend(Variable, BuiltInVariable);
@@ -241,9 +251,9 @@ extend(Variable, BuiltInVariable);
 
 
 
-function AutoGlobalVariable(declaration)
+function AutoGlobalVariable(name, declaration)
 {
-	Variable.call(this, declaration);
+	Variable.call(this, name, declaration);
 }
 
 extend(Variable, AutoGlobalVariable);
@@ -338,7 +348,7 @@ VariableDeclarator.prototype.getId = function()
 VariableDeclarator.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
-	scope.setMember(this.getId(), new Variable(this));
+	scope.addMember(new Variable(this.getId(), this));
 	if (this._init)
 		this._init.initialiseScope(scope);
 };
@@ -370,18 +380,18 @@ FunctionDeclaration.prototype.getId = function()
 FunctionDeclaration.prototype.initialiseScope = function(parent)
 {
 	checkTypes(arguments, Scope);
-	parent.setMember(this.getId(), new Variable(this));
+	parent.addMember(new Variable(this.getId(), this));
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.setMember(param.getName(), new Variable());
+		scope.addMember(new Variable(param.getName()));
 	});
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.setMember("arguments", new BuiltInVariable());
+	scope.addMember(new BuiltInVariable("arguments"));
 	
 	this._body.initialiseScope(scope);
 	
@@ -1217,19 +1227,19 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 		// insert wrapper scope for the identifier
 		// XXX: what about the identifier on object getters/setters?
 		parent = new Scope(this, parent);
-		parent.setMember(this._id.getName(), new Variable(this));
+		parent.addMember(new Variable(this._id.getName(), this));
 	}
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.setMember(param.getName(), new Variable());
+		scope.addMember(new Variable(param.getName()));
 	});
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.setMember("arguments", new BuiltInVariable());
+	scope.addMember(new BuiltInVariable("arguments"));
 	
 	this._body.initialiseScope(scope);
 	
