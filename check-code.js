@@ -138,7 +138,7 @@ function Scope(owner, parent)
 Scope.prototype.lookupMember = function(id)
 {
 	checkTypes(arguments, "string");
-	return this._members[id] || (this._parent && this._parent.lookupMember(id)) || null;
+	return this._members.hasOwnProperty(id) ? this._members[id] : this._parent && this._parent.lookupMember(id);
 };
 
 Scope.prototype.setMember = function(id, variable)
@@ -189,7 +189,7 @@ extend(Scope, GlobalScope);
 GlobalScope.prototype.lookupMember = function(id)
 {
 	checkTypes(arguments, "string");
-	return this._members[id] || (this._members[id] = new AutoGlobalVariable());
+	return this._members.hasOwnProperty(id) ? this._members[id] : (this._members[id] = new AutoGlobalVariable());
 };
 
 
