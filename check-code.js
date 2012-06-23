@@ -22,7 +22,7 @@ function main()
 			{
 				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
 				
-				if (scope._members[member]._references.length == 0)
+				if (!scope._members[member].isReferenced())
 				{
 					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member, scopeName));
 				}
@@ -220,6 +220,11 @@ function Variable(declaration)
 Variable.prototype.addReferrer = function(identifier)
 {
 	this._references.push(identifier);
+};
+
+Variable.prototype.isReferenced = function()
+{
+	return this._references.length > 0;
 };
 
 
