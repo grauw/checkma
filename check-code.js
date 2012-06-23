@@ -19,7 +19,7 @@ function main()
 		scope.getMembers().forEach(function(member) {
 			if (!(member instanceof BuiltInVariable))
 			{
-				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getId && scope._owner.getId() || scope._owner.constructor.name);
+				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getName && scope._owner.getName() || scope._owner.constructor.name);
 				
 				if (!member.isReferenced())
 				{
@@ -153,16 +153,16 @@ Scope.prototype.getMembers = function()
 	return members;
 };
 
-Scope.prototype.getMember = function(id)
+Scope.prototype.getMember = function(name)
 {
 	checkTypes(arguments, "string");
-	return this._members.hasOwnProperty(id) ? this._members[id] : null;
+	return this._members.hasOwnProperty(name) ? this._members[name] : null;
 };
 
-Scope.prototype.lookupMember = function(id)
+Scope.prototype.lookupMember = function(name)
 {
 	checkTypes(arguments, "string");
-	return this._members.hasOwnProperty(id) ? this._members[id] : this._parent && this._parent.lookupMember(id);
+	return this._members.hasOwnProperty(name) ? this._members[name] : this._parent && this._parent.lookupMember(name);
 };
 
 Scope.prototype.addMember = function(variable)
@@ -213,10 +213,10 @@ function GlobalScope()
 
 extend(Scope, GlobalScope);
 
-GlobalScope.prototype.lookupMember = function(id)
+GlobalScope.prototype.lookupMember = function(name)
 {
 	checkTypes(arguments, "string");
-	return this._members.hasOwnProperty(id) ? this._members[id] : this.addMember(new AutoGlobalVariable(id));
+	return this._members.hasOwnProperty(name) ? this._members[name] : this.addMember(new AutoGlobalVariable(name));
 };
 
 
@@ -360,7 +360,7 @@ function VariableDeclarator(json)
 
 types.VariableDeclarator = extend(Node, VariableDeclarator);
 
-VariableDeclarator.prototype.getId = function()
+VariableDeclarator.prototype.getName = function()
 {
 	return this._id.getName();
 };
@@ -368,7 +368,7 @@ VariableDeclarator.prototype.getId = function()
 VariableDeclarator.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
-	scope.addMember(new Variable(this.getId(), this));
+	scope.addMember(new Variable(this.getName(), this));
 	if (this._init)
 		this._init.initialiseScope(scope);
 };
@@ -392,7 +392,7 @@ function FunctionDeclaration(json)
 
 types.FunctionDeclaration = extend(Statement, FunctionDeclaration);
 
-FunctionDeclaration.prototype.getId = function()
+FunctionDeclaration.prototype.getName = function()
 {
 	return this._id.getName();
 };
@@ -400,7 +400,7 @@ FunctionDeclaration.prototype.getId = function()
 FunctionDeclaration.prototype.initialiseScope = function(parent)
 {
 	checkTypes(arguments, Scope);
-	parent.addMember(new Variable(this.getId(), this));
+	parent.addMember(new Variable(this.getName(), this));
 	
 	var scope = new Scope(this, parent);
 	
@@ -1242,7 +1242,7 @@ function FunctionExpression(json)
 
 types.FunctionExpression = extend(Expression, FunctionExpression);
 
-FunctionExpression.prototype.getId = function()
+FunctionExpression.prototype.getName = function()
 {
 	return this._id && this._id.getName() || null;
 };
