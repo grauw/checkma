@@ -24,12 +24,12 @@ function main()
 				
 				if (scope._members[member]._references.length == 0)
 				{
-					console.log("Scope", name, "member", member, "is not referenced.");
+					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member, name));
 				}
 				
 				if (scope._members[member] instanceof AutoGlobalVariable)
 				{
-					console.log("Scope", name, "member", member, "is a global.");
+					console.log(format("New global variable \"%1\".", member));
 				}
 			}
 		}
@@ -76,6 +76,14 @@ function checkTypes(args) {
 		}
 	}
 }
+
+function format(string) {
+	checkTypes(arguments, "string");
+	for (var i = 1; i < arguments.length; i++)
+		string = string.replace("%" + i, arguments[i]);
+	return string;
+}
+
 
 
 
