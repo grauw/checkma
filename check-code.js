@@ -143,6 +143,12 @@ function Scope(owner, parent)
 	this._members["this"] = new BuiltInVariable();
 }
 
+Scope.prototype.getMember = function(id)
+{
+	checkTypes(arguments, "string");
+	return this._members.hasOwnProperty(id) ? this._members[id] : null;
+};
+
 Scope.prototype.lookupMember = function(id)
 {
 	checkTypes(arguments, "string");
