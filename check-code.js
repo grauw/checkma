@@ -19,11 +19,9 @@ function main()
 		scope.getMembers().forEach(function(member) {
 			if (!(member instanceof BuiltInVariable))
 			{
-				var scopeName = scope instanceof GlobalScope ? "global" : scope._owner && (scope._owner instanceof Program ? "program" : scope._owner.getName && scope._owner.getName() || scope._owner.constructor.name);
-				
 				if (!member.isReferenced())
 				{
-					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member.getName(), scopeName));
+					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member.getName(), scope.getName()));
 				}
 				
 				if (member instanceof AutoGlobalVariable)
@@ -174,6 +172,18 @@ Scope.prototype.addMember = function(variable)
 	return variable;
 };
 
+Scope.prototype.getName = function()
+{
+	if (this._owner)
+	{
+		if (this._owner instanceof Program)
+			return "program";
+		else if (this._owner instanceof FunctionExpression || this._owner instanceof FunctionDeclaration)
+			return "function" + (this._owner.getName() ? " " + this._owner.getName() : "") + "()";
+	}
+	return "anonymous";
+};
+
 
 
 
@@ -217,6 +227,11 @@ GlobalScope.prototype.lookupMember = function(name)
 {
 	checkTypes(arguments, "string");
 	return this._members.hasOwnProperty(name) ? this._members[name] : this.addMember(new AutoGlobalVariable(name));
+};
+
+GlobalScope.prototype.getName = function()
+{
+	return "global";
 };
 
 
