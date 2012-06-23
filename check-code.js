@@ -885,6 +885,11 @@ function Identifier(json)
 
 types.Identifier = extend(Expression, Identifier);
 
+Identifier.prototype.getName = function()
+{
+	return this._name;
+};
+
 Identifier.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
@@ -1175,7 +1180,7 @@ types.FunctionExpression = extend(Expression, FunctionExpression);
 
 FunctionExpression.prototype.getId = function()
 {
-	return this._id && this._id._name || null;
+	return this._id && this._id.getName() || null;
 };
 
 FunctionExpression.prototype.initialiseScope = function(parent)
@@ -1186,14 +1191,14 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 		// insert wrapper scope for the identifier
 		// XXX: what about the identifier on object getters/setters?
 		parent = new Scope(this, parent);
-		parent.addMember(this._id._name, new Reference(this));
+		parent.addMember(this._id.getName(), new Reference(this));
 	}
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param._name, new Reference());
+		scope.addMember(param.getName(), new Reference());
 	});
 	
 	// add arguments object
@@ -1204,7 +1209,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param._name, new Reference());
+		scope.addMember(param.getName(), new Reference());
 	});
 	
 	this._scope = scope;
