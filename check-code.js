@@ -188,6 +188,7 @@ extend(Scope, GlobalScope);
 
 GlobalScope.prototype.lookupMember = function(id)
 {
+	checkTypes(arguments, "string");
 	return this._members[id] || (this._members[id] = new AutoGlobalReference());
 };
 
