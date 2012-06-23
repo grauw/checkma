@@ -386,7 +386,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(new Variable(param.getName()));
+		scope.addMember(new Variable(param.getName(), param));
 	});
 	
 	// add arguments object
@@ -1234,7 +1234,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(new Variable(param.getName()));
+		scope.addMember(new Variable(param.getName(), param));
 	});
 	
 	// add arguments object
