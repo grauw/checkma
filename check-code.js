@@ -28,7 +28,10 @@ function main()
 				
 				if (member instanceof AutoGlobalVariable)
 				{
-					console.log(format("New global variable \"%1\".", member.getName()));
+					if (member.isModified())
+						console.log(format("New global variable \"%1\".", member.getName()));
+					else
+						console.log(format("Undefined variable \"%1\".", member.getName()));
 				}
 			}
 		});
