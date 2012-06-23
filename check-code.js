@@ -141,7 +141,7 @@ Scope.prototype.lookupMember = function(id)
 	return this._members[id] || (this._parent && this._parent.lookupMember(id)) || null;
 };
 
-Scope.prototype.addMember = function(id, variable)
+Scope.prototype.setMember = function(id, variable)
 {
 	checkTypes(arguments, "string", Variable);
 	this._members[id] = variable;
@@ -316,7 +316,7 @@ VariableDeclarator.prototype.getId = function()
 VariableDeclarator.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
-	scope.addMember(this.getId(), new Variable(this));
+	scope.setMember(this.getId(), new Variable(this));
 	if (this._init)
 		this._init.initialiseScope(scope);
 };
@@ -348,18 +348,18 @@ FunctionDeclaration.prototype.getId = function()
 FunctionDeclaration.prototype.initialiseScope = function(parent)
 {
 	checkTypes(arguments, Scope);
-	parent.addMember(this.getId(), new Variable(this));
+	parent.setMember(this.getId(), new Variable(this));
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param._name, new Variable());
+		scope.setMember(param._name, new Variable());
 	});
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.addMember("arguments", new BuiltInVariable());
+	scope.setMember("arguments", new BuiltInVariable());
 	
 	this._body.initialiseScope(scope);
 	
@@ -1195,25 +1195,25 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 		// insert wrapper scope for the identifier
 		// XXX: what about the identifier on object getters/setters?
 		parent = new Scope(this, parent);
-		parent.addMember(this._id.getName(), new Variable(this));
+		parent.setMember(this._id.getName(), new Variable(this));
 	}
 	
 	var scope = new Scope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param.getName(), new Variable());
+		scope.setMember(param.getName(), new Variable());
 	});
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.addMember("arguments", new BuiltInVariable());
+	scope.setMember("arguments", new BuiltInVariable());
 	
 	this._body.initialiseScope(scope);
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param.getName(), new Variable());
+		scope.setMember(param.getName(), new Variable());
 	});
 	
 	this._scope = scope;
