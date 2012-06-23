@@ -1197,7 +1197,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	
 	// add arguments object
 	// FIXME: this._needs to be set inbetween the function and the variable declarations
-	scope.addMember("arguments", new Reference());
+	scope.addMember("arguments", new BuiltInReference());
 	
 	this._body.initialiseScope(scope);
 	
