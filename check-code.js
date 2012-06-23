@@ -353,7 +353,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(param.name, new Reference());
+		scope.addMember(param._name, new Reference());
 	});
 	
 	// add arguments object
