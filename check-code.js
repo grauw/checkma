@@ -1014,12 +1014,16 @@ NewExpression.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
 	this._callee.initialiseScope(scope);
+	for (var i = 0; i < this._arguments.length; i++)
+		this._arguments[i].initialiseScope(scope);
 };
 
 NewExpression.prototype.initialiseReferences = function(scope)
 {
 	checkTypes(arguments, Scope);
 	this._callee.initialiseReferences(scope);
+	for (var i = 0; i < this._arguments.length; i++)
+		this._arguments[i].initialiseReferences(scope);
 };
 
 
