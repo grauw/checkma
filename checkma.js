@@ -294,6 +294,16 @@ Variable.prototype.isRedeclared = function()
 
 
 
+function ParameterVariable(name, declaration)
+{
+	Variable.call(this, name, declaration);
+}
+
+extend(Variable, ParameterVariable);
+
+
+
+
 function BuiltInVariable(name, declaration)
 {
 	Variable.call(this, name, declaration);
@@ -439,7 +449,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(new Variable(param.getName(), param));
+		scope.addMember(new ParameterVariable(param.getName(), param));
 	});
 	
 	// add arguments object
@@ -1295,7 +1305,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 	
 	// add parameters
 	this._params.forEach(function(param) {
-		scope.addMember(new Variable(param.getName(), param));
+		scope.addMember(new ParameterVariable(param.getName(), param));
 	});
 	
 	// add arguments object
