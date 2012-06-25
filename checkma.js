@@ -24,6 +24,11 @@ function main()
 					console.log(format("Unreferenced variable \"%1\" in scope \"%2\".", member.getName(), scope.getName()));
 				}
 				
+				if (member.isRedeclared())
+				{
+					console.log(format("Redeclared variable \"%1\" in scope \"%2\".", member.getName(), scope.getName()));
+				}
+				
 				if (member instanceof AutoGlobalVariable)
 				{
 					if (member.isModified())
@@ -167,8 +172,9 @@ Scope.prototype.addMember = function(variable)
 {
 	checkTypes(arguments, Variable);
 	if (this._members.hasOwnProperty(variable.getName()))
-		throw new Error("Member " + variable.getName() + " already exists.");
-	this._members[variable.getName()] = variable;
+		this._members[variable.getName()].addRedeclaration(variable._declaration);
+	else
+		this._members[variable.getName()] = variable;
 	return variable;
 };
 
@@ -244,6 +250,7 @@ function Variable(name, declaration)
 	this._declaration = declaration || null;
 	this._references = [];
 	this._assignments = [];
+	this._redeclarations = [];
 }
 
 Variable.prototype.getName = function()
@@ -271,6 +278,17 @@ Variable.prototype.addAssignment = function(identifier)
 Variable.prototype.isModified = function()
 {
 	return this._assignments.length > 0;
+};
+
+Variable.prototype.addRedeclaration = function(identifier)
+{
+	checkTypes(arguments, Node);
+	this._redeclarations.push(identifier);
+};
+
+Variable.prototype.isRedeclared = function()
+{
+	return this._redeclarations.length > 0;
 };
 
 
