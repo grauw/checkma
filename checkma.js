@@ -1,5 +1,6 @@
 var fs = require("fs");
 var esprima = require("esprima");
+var checkTypes = require("./utils").checkTypes;
 var format = require("./utils").format;
 var Program = require("./ast").Program;
 var BuiltInVariable = require("./ast").BuiltInVariable;
@@ -12,17 +13,26 @@ function main()
 		throw new Error("Missing source path parameter.");
 	
 	for (var i = 2; i < process.argv.length; i++)
-		loadProgram(process.argv[i]);
+		new Checker(process.argv[i]).load();
 }
 
-function loadProgram(path)
+
+function Checker(path)
 {
-	var source = fs.readFileSync(path, "ascii");
-	parseProgram(path, source);
+	this._path = path;
+	this._program = null;
 }
 
-function parseProgram(path, source)
+Checker.prototype.load = function()
 {
+	var source = fs.readFileSync(this._path, "ascii");
+	this.parse(source);
+};
+
+Checker.prototype.parse = function(source)
+{
+	checkTypes(arguments, "string");
+	
 	var ast = esprima.parse(source);
 
 	var program = new Program(ast);
@@ -30,14 +40,19 @@ function parseProgram(path, source)
 	program.initialiseScope();
 	program.initialiseReferences();
 	
-	checkProgram(path, program);
-}
-
-function checkProgram(path, program)
-{
-	console.log("Checking " + path + "...\n");
+	this._program = program;
 	
-	var scopes = program.getGlobalScope().getScopes();
+	this.check();
+};
+
+Checker.prototype.check = function()
+{
+	if (!this._program)
+		throw new Error("Program not initialised.");
+
+	console.log("Checking " + this._path + "...\n");
+	
+	var scopes = this._program.getGlobalScope().getScopes();
 	
 	scopes.forEach(function(scope) {
 		scope.getMembers().forEach(function(member) {
@@ -65,7 +80,7 @@ function checkProgram(path, program)
 	});
 	
 	console.log();
-}
+};
 
 
 main();
