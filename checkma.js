@@ -18,7 +18,6 @@ function main()
 	for (var i = 2; i < process.argv.length; i++)
 		checkers.push(new Checker(process.argv[i]));
 	
-	var self = this;
 	var loadQueue = checkers.slice(0);
 	loadQueue.slice(0).forEach(function(checker) {
 		checker.addLoadListener(function() {
