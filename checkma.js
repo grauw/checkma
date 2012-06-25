@@ -253,7 +253,7 @@ Variable.prototype.getName = function()
 
 Variable.prototype.addReferrer = function(identifier)
 {
-	checkTypes(arguments, [Node]);  // Identifier or ThisExpression
+	checkTypes(arguments, Node);  // Identifier or ThisExpression
 	this._references.push(identifier);
 };
 
