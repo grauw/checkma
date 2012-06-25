@@ -86,25 +86,22 @@ Checker.prototype.check = function()
 	var checker = this;
 	scopes.forEach(function(scope) {
 		scope.getMembers().forEach(function(member) {
-			if (!(member instanceof BuiltInVariable))
+			if (!(member instanceof BuiltInVariable) && !member.isReferenced())
 			{
-				if (!member.isReferenced())
-				{
-					console.log(format("Unreferenced variable \"%1\" in scope \"%2\" in %3.", member.getName(), scope.getName(), checker._path));
-				}
-				
-				if (member.isRedeclared())
-				{
-					console.log(format("Redeclared variable \"%1\" in scope \"%2\" in %3.", member.getName(), scope.getName(), checker._path));
-				}
-				
-				if (member instanceof AutoGlobalVariable)
-				{
-					if (member.isModified())
-						console.log(format("New global variable \"%1\" in %2.", member.getName(), checker._path));
-					else
-						console.log(format("Undefined variable \"%1\" in %2.", member.getName(), checker._path));
-				}
+				console.log(format("Unreferenced variable \"%1\" in scope \"%2\" in %3.", member.getName(), scope.getName(), checker._path));
+			}
+			
+			if (member.isRedeclared())
+			{
+				console.log(format("Redeclared variable \"%1\" in scope \"%2\" in %3.", member.getName(), scope.getName(), checker._path));
+			}
+			
+			if (member instanceof AutoGlobalVariable)
+			{
+				if (member.isModified())
+					console.log(format("New global variable \"%1\" in %2.", member.getName(), checker._path));
+				else
+					console.log(format("Undefined variable \"%1\" in %2.", member.getName(), checker._path));
 			}
 		});
 	});
