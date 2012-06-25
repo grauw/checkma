@@ -1,5 +1,5 @@
-var fs = require('fs');
-var esprima = require('esprima');
+var fs = require("fs");
+var esprima = require("esprima");
 
 function main()
 {
@@ -7,7 +7,7 @@ function main()
 		throw new Error("Missing required argument.");
 
 	var path = process.argv[2];
-	var content = fs.readFileSync(path, 'ascii');
+	var content = fs.readFileSync(path, "ascii");
 	var ast = esprima.parse(content);
 
 	var program = new Program(ast);
