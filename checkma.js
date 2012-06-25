@@ -271,6 +271,29 @@ ProgramScope.prototype.getName = function()
 
 
 
+function CatchScope(owner, parent)
+{
+	checkTypes(arguments, CatchClause, Scope);
+	Scope.call(this, owner, parent);
+};
+
+extend(Scope, CatchScope);
+
+CatchScope.prototype.addMember = function(variable)
+{
+	if (variable instanceof ParameterVariable)
+		return Scope.prototype.addMember.call(this, variable);
+	return this._parent.addMember(variable);
+};
+
+CatchScope.prototype.getName = function()
+{
+	return "catch";
+};
+
+
+
+
 function Variable(name, declaration)
 {
 	checkTypes(arguments, "string", [Node]);
@@ -805,6 +828,8 @@ TryStatement.prototype.initialiseReferences = function(scope)
 function CatchClause(json)
 {
 	Node.call(this, json);
+	
+	this._scope = null;
 }
 
 types.CatchClause = extend(Node, CatchClause);
@@ -812,13 +837,15 @@ types.CatchClause = extend(Node, CatchClause);
 CatchClause.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
-	this._body.initialiseScope(scope);
+	this._scope = new CatchScope(this, scope);
+	this._scope.addMember(new ParameterVariable(this._param.getName(), this._param));
+	this._body.initialiseScope(this._scope);
 };
 
 CatchClause.prototype.initialiseReferences = function(scope)
 {
 	checkTypes(arguments, Scope);
-	this._body.initialiseReferences(scope);
+	this._body.initialiseReferences(this._scope);
 };
 
 
