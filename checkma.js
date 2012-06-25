@@ -12,6 +12,8 @@ function main()
 	if (process.argv.length < 3)
 		throw new Error("Missing source path parameter.");
 	
+	console.log("Loading and parsing files...");
+	
 	var checkers = [];
 	for (var i = 2; i < process.argv.length; i++)
 		checkers.push(new Checker(process.argv[i]));
