@@ -120,10 +120,8 @@ function createFromJson(json)
 			return createFromJson(json);
 		});
 	}
-	if (json instanceof Object && !(json instanceof RegExp))
+	if (json instanceof Object && !(json instanceof RegExp) && json.type)
 	{
-		if (!json.type)
-			{ console.log(json); throw new Error("No type."); }
 		if (!types[json.type])
 			{ console.log(json); throw new Error("Type " + json.type + " not found."); }
 		
