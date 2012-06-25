@@ -143,7 +143,6 @@ function Scope(owner, parent)
 	this._owner = owner;
 	this._parent = parent || null;
 	this._members = {};
-	this.addMember(new BuiltInVariable("this"));
 }
 
 Scope.prototype.getMembers = function()
@@ -178,13 +177,6 @@ Scope.prototype.addMember = function(variable)
 
 Scope.prototype.getName = function()
 {
-	if (this._owner)
-	{
-		if (this._owner instanceof Program)
-			return "program";
-		else if (this._owner instanceof FunctionExpression || this._owner instanceof FunctionDeclaration)
-			return "function" + (this._owner.getName() ? " " + this._owner.getName() : "") + "()";
-	}
 	return "anonymous";
 };
 
@@ -236,6 +228,44 @@ GlobalScope.prototype.lookupMember = function(name)
 GlobalScope.prototype.getName = function()
 {
 	return "global";
+};
+
+
+
+
+function FunctionScope(owner, parent)
+{
+	checkTypes(arguments, Node, Scope);
+	if (!(owner instanceof FunctionExpression || owner instanceof FunctionDeclaration))
+		throw new Error("Function owner expected.");
+	Scope.call(this, owner, parent);
+	
+	this.addMember(new BuiltInVariable("this"));
+}
+
+extend(Scope, FunctionScope);
+
+FunctionScope.prototype.getName = function()
+{
+	return "function" + (this._owner.getName() ? " " + this._owner.getName() : "") + "()";
+};
+
+
+
+
+function ProgramScope(owner, parent)
+{
+	checkTypes(arguments, Program, GlobalScope);
+	Scope.call(this, owner, parent);
+	
+	this.addMember(new BuiltInVariable("this"));
+}
+
+extend(Scope, ProgramScope);
+
+ProgramScope.prototype.getName = function()
+{
+	return "program";
 };
 
 
@@ -333,7 +363,7 @@ types.Program = extend(Node, Program);
 
 Program.prototype.initialiseScope = function()
 {
-	var scope = new Scope(this, new GlobalScope());
+	var scope = new ProgramScope(this, new GlobalScope());
 	
 	for (var i = 0; i < this._body.length; i++)
 		this._body[i].initialiseScope(scope);
@@ -443,7 +473,7 @@ FunctionDeclaration.prototype.initialiseScope = function(parent)
 	checkTypes(arguments, Scope);
 	parent.addMember(new Variable(this.getName(), this));
 	
-	var scope = new Scope(this, parent);
+	var scope = new FunctionScope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
@@ -1299,7 +1329,7 @@ FunctionExpression.prototype.initialiseScope = function(parent)
 		parent.addMember(new Variable(this._id.getName(), this));
 	}
 	
-	var scope = new Scope(this, parent);
+	var scope = new FunctionScope(this, parent);
 	
 	// add parameters
 	this._params.forEach(function(param) {
