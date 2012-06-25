@@ -4,23 +4,41 @@ var format = require("./utils").format;
 var Program = require("./ast").Program;
 var BuiltInVariable = require("./ast").BuiltInVariable;
 var AutoGlobalVariable = require("./ast").AutoGlobalVariable;
-var scopes = require("./ast").scopes;
 
 
 function main()
 {
-	if (process.argv.length != 3)
-		throw new Error("Missing required argument.");
+	if (process.argv.length < 3)
+		throw new Error("Missing source path parameter.");
+	
+	for (var i = 2; i < process.argv.length; i++)
+		loadProgram(process.argv[i]);
+}
 
-	var path = process.argv[2];
-	var content = fs.readFileSync(path, "ascii");
-	var ast = esprima.parse(content);
+function loadProgram(path)
+{
+	var source = fs.readFileSync(path, "ascii");
+	parseProgram(path, source);
+}
+
+function parseProgram(path, source)
+{
+	var ast = esprima.parse(source);
 
 	var program = new Program(ast);
 	
 	program.initialiseScope();
 	program.initialiseReferences();
+	
+	checkProgram(path, program);
+}
 
+function checkProgram(path, program)
+{
+	console.log("Checking " + path + "...\n");
+	
+	var scopes = program.getGlobalScope().getScopes();
+	
 	scopes.forEach(function(scope) {
 		scope.getMembers().forEach(function(member) {
 			if (!(member instanceof BuiltInVariable))
@@ -45,6 +63,8 @@ function main()
 			}
 		});
 	});
+	
+	console.log();
 }
 
 

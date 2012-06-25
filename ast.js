@@ -40,18 +40,17 @@ function createFromJson(json)
 }
 
 var types = {};
-var scopes = [];
 
 
 
 
 function Scope(owner, parent)
 {
-	scopes.push(this);
-	
 	this._owner = owner;
 	this._parent = parent || null;
 	this._members = {};
+	
+	this.registerScope(this);
 }
 
 Scope.prototype.getMembers = function()
@@ -84,6 +83,12 @@ Scope.prototype.addMember = function(variable)
 	return variable;
 };
 
+Scope.prototype.registerScope = function(scope)
+{
+	if (this._parent)
+		this._parent.registerScope(scope);
+};
+
 Scope.prototype.getName = function()
 {
 	return "anonymous";
@@ -94,7 +99,10 @@ Scope.prototype.getName = function()
 
 function GlobalScope()
 {
+	this._scopes = [];
+	
 	Scope.call(this, null, null);
+	
 	this.addMember(new BuiltInVariable("NaN"));
 	this.addMember(new BuiltInVariable("Infinity"));
 	this.addMember(new BuiltInVariable("undefined"));
@@ -127,6 +135,17 @@ function GlobalScope()
 }
 
 extend(Scope, GlobalScope);
+
+GlobalScope.prototype.getScopes = function()
+{
+	return this._scopes;
+};
+
+GlobalScope.prototype.registerScope = function(scope)
+{
+	checkTypes(arguments, Scope);
+	this._scopes.push(scope);
+};
 
 GlobalScope.prototype.lookupMember = function(name)
 {
@@ -288,14 +307,20 @@ function Program(json)
 {
 	Node.call(this, json);
 	
+	this._globalScope = new GlobalScope();
 	this._scope = null;
 }
 
 types.Program = extend(Node, Program);
 
+Program.prototype.getGlobalScope = function()
+{
+	return this._globalScope;
+};
+
 Program.prototype.initialiseScope = function()
 {
-	var scope = new ProgramScope(this, new GlobalScope());
+	var scope = new ProgramScope(this, this._globalScope);
 	
 	for (var i = 0; i < this._body.length; i++)
 		this._body[i].initialiseScope(scope);
@@ -1418,4 +1443,3 @@ exports.FunctionExpression = FunctionExpression;
 exports.ObjectExpression = ObjectExpression;
 exports.Property = Property;
 exports.SequenceExpression = SequenceExpression;
-exports.scopes = scopes;
