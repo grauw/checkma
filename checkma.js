@@ -12,8 +12,26 @@ function main()
 	if (process.argv.length < 3)
 		throw new Error("Missing source path parameter.");
 	
+	var checkers = [];
 	for (var i = 2; i < process.argv.length; i++)
-		new Checker(process.argv[i]).load();
+		checkers.push(new Checker(process.argv[i]));
+	
+	var self = this;
+	var loadQueue = checkers.slice(0);
+	loadQueue.slice(0).forEach(function(checker) {
+		checker.addLoadListener(function() {
+			loadQueue.splice(loadQueue.indexOf(checker), 1);
+			if (!loadQueue.length)
+				checkAll();
+		});
+		checker.load();
+	});
+	
+	function checkAll() {
+		checkers.forEach(function(checker) {
+			checker.check();
+		});
+	}
 }
 
 
@@ -21,12 +39,17 @@ function Checker(path)
 {
 	this._path = path;
 	this._program = null;
+	this._loadListeners = [];
 }
 
 Checker.prototype.load = function()
 {
-	var source = fs.readFileSync(this._path, "ascii");
-	this.parse(source);
+	var checker = this;
+	fs.readFile(this._path, "ascii", function(error, source) {
+		if (error)
+			throw error;
+		checker.parse(source);
+	});
 };
 
 Checker.prototype.parse = function(source)
@@ -42,7 +65,14 @@ Checker.prototype.parse = function(source)
 	
 	this._program = program;
 	
-	this.check();
+	for (var i = 0; i < this._loadListeners.length; i++)
+		this._loadListeners[i]();
+};
+
+Checker.prototype.addLoadListener = function(listener)
+{
+	checkTypes(arguments, Function);
+	this._loadListeners.push(listener);
 };
 
 Checker.prototype.check = function()
