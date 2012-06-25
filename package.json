@@ -1,5 +1,5 @@
 {
-	"name": "check-code",
+	"name": "checkma",
 	"version": "0.1.0",
 	"author": "Laurens Holst",
 	"description": "A JavaScript static analyzer.",
