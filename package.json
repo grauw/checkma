@@ -16,6 +16,6 @@
 	},
 	"repository": {
 		"type": "mercurial",
-		"url": "https://hg.grauw.nl/check-code/"
+		"url": "https://bitbucket.org/grauw/checkma"
 	}
 }
