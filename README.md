@@ -28,12 +28,17 @@ Checkma is able to detect:
   * New global variables
   * Unreferenced variables
   * Redeclared variables
+  * Syntax errors
+
+Ariya Hidayat’s [Esprima][1] is used for the JavaScript parsing.
+
+[1]: http://esprima.org/
 
 Developer information
 ---------------------
 
 If you would like to do some hacking on checkma, clone the source code into your
-development environment using [Mercurial][1]:
+development environment using [Mercurial][2]:
 
     hg clone https://bitbucket.org/grauw/checkma
 
@@ -41,13 +46,13 @@ Install a convenient global symlink with the following command:
 
     npm link
 
-To contribute, [contact me][2] with a link to a repository with your changes and a
+To contribute, [contact me][3] with a link to a repository with your changes and a
 description. Please adhere to the existing code style, and make small commits
 with good commit messages. If you like, send in your changes for review early,
 so we can discuss them and agree on their direction.
 
-[1]: http://mercurial.selenic.com/
-[2]: http://www.grauw.nl/about.php
+[2]: http://mercurial.selenic.com/
+[3]: http://www.grauw.nl/about.php
 
 Authors
 -------
