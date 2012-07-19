@@ -11,6 +11,9 @@
 	"dependencies": {
 		"esprima": "0.9.x"
 	},
+	"bin": {
+		"checkma": "./cli.js"
+	},
 	"repository": {
 		"type": "mercurial",
 		"url": "https://hg.grauw.nl/check-code/"
