@@ -20,6 +20,8 @@ var format = require("./utils").format;
 var Program = require("./ast").Program;
 var BuiltInVariable = require("./ast").BuiltInVariable;
 var AutoGlobalVariable = require("./ast").AutoGlobalVariable;
+var ParameterVariable = require("./ast").ParameterVariable;
+var CatchScope = require("./ast").CatchScope;
 
 
 function main()
@@ -101,7 +103,7 @@ Checker.prototype.check = function()
 	var checker = this;
 	scopes.forEach(function(scope) {
 		scope.getMembers().forEach(function(member) {
-			if (!(member instanceof BuiltInVariable) && !member.isReferenced())
+			if (!member.isReferenced() && !(member instanceof BuiltInVariable) && !(scope instanceof CatchScope && member instanceof ParameterVariable))
 			{
 				console.log(format("Unreferenced variable \"%1\" in scope \"%2\" in %3.", member.getName(), scope.getName(), checker._path));
 			}
