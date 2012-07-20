@@ -60,6 +60,50 @@ function format(string) {
 }
 
 
+/**
+ * A limited parallel queue.
+ * It allows you to iterate over items n at a time.
+ * 
+ * @param {Array} items The items to iterate over.
+ * @param {number} limit The limit.
+ */
+function LimitQueue(items, limit)
+{
+	checkTypes(arguments, Array, "number");
+	if (limit < 1)
+		throw new Error("Limit must be a positive number.");
+	
+	this._remaining = items.slice(0).reverse();
+	this._processing = [];
+	this._limit = limit;
+}
+
+/**
+ * Loop over all items in the queue, invoking a callback.
+ * The callback has two parameters, the item and a done-callback function. When
+ * the item has been processed, the done callback should be invoked to continue.
+ * 
+ * @param {Function} processCallback Callback invoked for each item.
+ * @param {Function} doneCallback Callback invoked when the loop has finished.
+ */
+LimitQueue.prototype.forEach = function(processCallback, doneCallback)
+{
+	if (this._remaining.length == 0 && this._processing.length == 0)
+		return doneCallback();
+	
+	while (this._remaining.length > 0 && this._processing.length < this._limit)
+	{
+		var item = this._remaining.pop();
+		this._processing.push(item);
+		processCallback(item, function(item) {
+			this._processing.splice(this._processing.indexOf(item), 1);
+			this.forEach(processCallback, doneCallback);
+		}.bind(this, item));
+	}
+};
+
+
 exports.extend = extend;
 exports.checkTypes = checkTypes;
 exports.format = format;
+exports.LimitQueue = LimitQueue;

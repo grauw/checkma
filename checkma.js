@@ -17,6 +17,7 @@ var fs = require("fs");
 var esprima = require("esprima");
 var checkTypes = require("./utils").checkTypes;
 var format = require("./utils").format;
+var LimitQueue = require("./utils").LimitQueue;
 var Program = require("./ast").Program;
 var BuiltInVariable = require("./ast").BuiltInVariable;
 var AutoGlobalVariable = require("./ast").AutoGlobalVariable;
@@ -35,21 +36,15 @@ function main()
 	for (var i = 2; i < process.argv.length; i++)
 		checkers.push(new Checker(process.argv[i]));
 	
-	var loadQueue = checkers.slice(0);
-	loadQueue.slice(0).forEach(function(checker) {
-		checker.addLoadListener(function() {
-			loadQueue.splice(loadQueue.indexOf(checker), 1);
-			if (!loadQueue.length)
-				checkAll();
-		});
+	var loadQueue = new LimitQueue(checkers, 50);
+	loadQueue.forEach(function(checker, doneCallback) {
+		checker.addLoadListener(doneCallback);
 		checker.load();
-	});
-	
-	function checkAll() {
+	}, function() {
 		checkers.forEach(function(checker) {
 			checker.check();
 		});
-	}
+	});
 }
 
 
