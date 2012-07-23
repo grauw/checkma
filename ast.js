@@ -1024,12 +1024,14 @@ MemberExpression.prototype.initialiseScope = function(scope)
 {
 	checkTypes(arguments, Scope);
 	this._object.initialiseScope(scope);
+	this._property.initialiseScope(scope);
 };
 
 MemberExpression.prototype.initialiseReferences = function(scope)
 {
 	checkTypes(arguments, Scope);
 	this._object.initialiseReferences(scope);
+	this._property.initialiseReferences(scope);
 };
 
 
