@@ -46,8 +46,8 @@ Install a convenient global symlink with the following command:
 
     npm link
 
-To contribute, [contact me][3] with a link to a repository with your changes and a
-description. Please adhere to the existing code style, and make small commits
+To contribute, [contact me][3] with a link to a repository with your changes and
+a description. Please adhere to the existing code style, and make small commits
 with good commit messages. If you like, send in your changes for review early,
 so we can discuss them and agree on their direction.
 
