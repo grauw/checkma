@@ -1,7 +1,7 @@
 {
 	"name": "checkma",
 	"version": "0.1.1",
-	"author": "Laurens Holst",
+	"author": "Laurens Holst (http://www.grauw.nl/)",
 	"description": "A JavaScript static analyzer.",
 	"license": "Apache 2.0",
 	"keywords": [
