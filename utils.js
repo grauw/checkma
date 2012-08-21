@@ -42,7 +42,7 @@ function checkTypes(args) {
 	for (var i = 1; i < arguments.length; i++) {
 		var type = arguments[i], arg = args[i - 1];
 		if (!(type instanceof Array && (type = type[0]) && arg == null) &&
-				!(typeof type == "string" && typeof arg == type) &&
+				!(typeof type == "string" && typeof arg == type && arg == arg) &&
 				!(type instanceof Function && arg instanceof type)) {
 			if (typeof type != "string" && !(type instanceof Function))
 				throw new Error("Unsupported type " + type + ".");
