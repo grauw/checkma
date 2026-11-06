@@ -21,7 +21,7 @@
 		"test": "node testrunner.js"
 	},
 	"repository": {
-		"type": "mercurial",
-		"url": "https://bitbucket.org/grauw/checkma"
+		"type": "git",
+		"url": "git+https://github.com/grauw/checkma.git"
 	}
 }

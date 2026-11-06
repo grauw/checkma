@@ -38,9 +38,9 @@ Developer information
 ---------------------
 
 If you would like to do some hacking on checkma, clone the source code into your
-development environment using [Mercurial][2]:
+development environment using [Git][2]:
 
-    hg clone https://bitbucket.org/grauw/checkma
+    git clone https://github.com/grauw/checkma.git
 
 Install a convenient global symlink with the following command:
 
@@ -51,7 +51,7 @@ a description. Please adhere to the existing code style, and make small commits
 with good commit messages. If you like, send in your changes for review early,
 so we can discuss them and agree on their direction.
 
-[2]: http://mercurial.selenic.com/
+[2]: https://git-scm.com/
 [3]: http://www.grauw.nl/about.php
 
 Authors
@@ -62,7 +62,7 @@ Authors
 Source code
 -----------
 
-<https://bitbucket.org/grauw/checkma>
+<https://github.com/grauw/checkma>
 
 License
 -------
